@@ -1,0 +1,12 @@
+# Ignore virtual environment
+venv/
+
+# Django-specific ignores
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+
+# IDE & OS files
+.vscode/
+.DS_Store
