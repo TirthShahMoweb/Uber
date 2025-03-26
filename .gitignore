@@ -6,6 +6,7 @@ venv/
 __pycache__/
 db.sqlite3
 .env
+backup.json
 
 # IDE & OS files
 .vscode/
