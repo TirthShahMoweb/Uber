@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,13 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', cast=bool, default=False)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-h7*4q*549%@sbg#e@n7dgoc8#b%y6a!86jc0!94+6&kk7l!_m4'
+# SECRET_KEY = 'django-insecure-h7*4q*549%@sbg#e@n7dgoc8#b%y6a!86jc0!94+6&kk7l!_m4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -80,17 +84,27 @@ WSGI_APPLICATION = 'Uber.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'Uber',
+#         'USER': 'postgres',
+#         'PASSWORD': 'tirth',
+#         'HOST': 'localhost',  # or your PostgreSQL server IP
+#         'PORT': '5432',  # Default PostgreSQL port
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Uber',
-        'USER': 'postgres',
-        'PASSWORD': 'tirth',
-        'HOST': 'localhost',  # or your PostgreSQL server IP
-        'PORT': '5432',  # Default PostgreSQL port
+        'ENGINE': config('DB_ENGINE'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -150,14 +164,26 @@ REST_FRAMEWORK = {
 ]
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
-EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
+# EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
+
+# SIMPLE_JWT = {
+#     'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+#     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+# }
+
+EMAIL_BACKEND = config('EMAIL_BACKEND')
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=config('ACCESS_TOKEN_LIFETIME_HOURS', cast=int)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=config('REFRESH_TOKEN_LIFETIME_DAYS', cast=int)),
 }
