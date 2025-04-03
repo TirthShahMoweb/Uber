@@ -3,7 +3,7 @@ from django.utils.timezone import timedelta
 from django.utils import timezone
 
 from rest_framework import serializers
-from ..models import User, AdminPermission, Permission
+from ..models import User, DriverDetail
 
 import secrets, random
 
@@ -21,7 +21,8 @@ class mobileNumberSerializer(serializers.Serializer):
             raise serializers.ValidationError({"status" : "error", "message" : "Mobile number must contain only numeric characters after '+'."})
 
         if not User.objects.filter(mobile_number=mobile_number).exists():
-            raise serializers.ValidationError({"status" : "error", "message" : "Mobile number does not exist. Proceed to signup."})
+            raise serializers.ValidationError({"status" : "error", "message" : "Mobile number does not exist! Proceed to signup."})
+
 
         return data
 
@@ -29,22 +30,25 @@ class mobileNumberSerializer(serializers.Serializer):
         mobile_number = validated_data['mobile_number']
         otp = random.randint(0000, 9999)
 
-        user, created = User.objects.get_or_create(
+        user = User.objects.get(
             mobile_number=mobile_number
         )
         user.user_type = 'driver'
         user.otp = otp
         user.save()
+        print(otp, "============================================================")
 
-        return {"message": "OTP generated successfully", "otp": otp, "user": user}
+        return {"message": "OTP generated successfully", "mobile_number" : mobile_number, "otp": otp, "user": user}
 
 
 class OtpVerificationSerializer(serializers.Serializer):
+    mobile_number = serializers.CharField(max_length=18)
     otp = serializers.CharField(max_length=4)
 
     def validate(self, data):
-        user = self.context["user"]
         otp = data["otp"]
+        mobile_number = data["mobile_number"]
+
         if not otp.isdigit():
             raise serializers.ValidationError({"status" : "error", "message" : "OTP must contain only numeric characters."})
 
@@ -53,14 +57,14 @@ class OtpVerificationSerializer(serializers.Serializer):
             raise serializers.ValidationError({"status" : "error", "message" : "OTP must be exactly 4 digits long."})
 
         otp = int(otp)
-        print(otp,type(otp))
+        user = User.objects.filter(mobile_number = mobile_number).first()
 
-        user = User.objects.filter(mobile_number = user).first()
+        if DriverDetail.objects.filter(user = user).exists():
+            if DriverDetail.objects.filter(user = user, status='pending').exists():
+                raise serializers.ValidationError({"status" : "error", "message" : "Your application is under verification."})
 
         if user.otp != otp:
-            raise serializers.ValidationError({"status" : "error", "message" : "Invalid OTP."})
-
-
+            raise serializers.ValidationError({"message" : "Invalid OTP."})
         return data
 
 
@@ -73,9 +77,17 @@ class CustomUserSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # if User.objects.filter(email=data['email']).exists():
         #     raise serializers.ValidationError({"email": "Email already exists"})
+        print(data,'------------------')
+        mobile_number = data["mobile_number"]
+        if not mobile_number.startswith("+"):
+            raise serializers.ValidationError({"message" : "Mobile number must start with a '+' sign for the country code."})
 
-        if User.objects.filter(mobile_number=data['mobile_number']).exists():
-            raise serializers.ValidationError({"status" : "error", "message" : "Mobile Number already exists."})
+        if not mobile_number[1:].isdigit():
+            raise serializers.ValidationError({"message" : "Mobile number must contain only numeric characters after '+'."})
+
+        if User.objects.filter(mobile_number=mobile_number).exists():
+            raise serializers.ValidationError({"message" : "Mobile Number already exists."})
+
         # if data['user_type'] == 'driver':
             # if not data['profile_pic']:
             #     raise serializers.ValidationError({"profile_pic": "Profile Pic is required for Driver"})
@@ -95,12 +107,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_data)
         user.verification_code = secrets.token_hex(32)
         user.verification_code_created_at = timezone.now()
+        otp = random.randint(0000,9999)
+        user.otp = otp
+        user.save()
+        print(otp)
         # user.set_password(password)
 
         # if profile_pic:
         #     user.profile_pic = profile_pic
-
-        user.save()
         return user
 
 
@@ -108,6 +122,15 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
+    def validate(self, data):
+        user = User.objects.filter(email = data['email']).first()
+        if not user:
+            raise serializers.ValidationError({"message" : "Email ID does not Exists."})
+
+        if not check_password(data['password'], user.password):
+            raise serializers.ValidationError({"message": "Invalid password or Email Id."})
+        print(data,"-------------------------------")
+        return data
 
 class AdminSerializer(serializers.ModelSerializer):
     class Meta:
@@ -199,3 +222,25 @@ class ChangePasswordSerializer(serializers.Serializer):
 #     class Meta:
 #         model = AdminPermissions
 #         fields = ('role_name',)
+
+
+class AddTeamMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'mobile_number', 'email', 'password', 'gender', 'role',)
+
+        def validate(self, data):
+            print(data)
+            if User.objects.filter(email = data["email"]).exists():
+                raise serializers.ValidationError({"email":"Email already exist."})
+
+            if User.objects.filter(mobile_number = data["mobile_number"]).exists():
+                raise serializers.ValidationError({"mobile Number":"Mobile number already exist."})
+
+            if data['role'] == None:
+                raise serializers.ValidationError({"Role":"Role is not defined."})
+            return data
+
+        def create(self, validated_data):
+            User.objects.create(**validated_data)
+            return validated_data

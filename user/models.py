@@ -46,6 +46,7 @@ class User(AbstractUser, BaseModel):
     user_type = models.CharField(max_length=10, choices = UserTypeChoices, default='customer')
     role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True)
 
+
     USERNAME_FIELD = 'mobile_number'
 
 
@@ -82,9 +83,23 @@ class DriverDetail(BaseModel):
 
 
 class DocumentRequired(BaseModel):
-    document_name = models.CharField(max_length=255)
+    document_name = models.ForeignKey('DocumentType', on_delete=models.PROTECT, related_name='documents')
+    # document_name = models.CharField(max_length=255)
     document_text = models.TextField(null=True, blank=True)
     document_image = models.ImageField(upload_to=unique_aadhar_photos_path, null=True, blank=True)
+
+
+class DocumentFieldType(models.TextChoices):
+    IMAGE = 'image', 'Image'
+    TEXT = 'text', 'Text'
+
+
+class DocumentType(BaseModel):
+    document_key = models.CharField(max_length=50)
+    document_label = models.CharField(max_length=255)
+    is_required = models.BooleanField(default=True)
+    field_type = models.CharField(max_length=20, choices=DocumentFieldType)
+    deleted_at = models.DateTimeField(null=True,  blank=True)
 
 
 class Role(BaseModel):

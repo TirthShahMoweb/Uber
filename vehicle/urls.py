@@ -8,7 +8,6 @@ from rest_framework_simplejwt.views import (
 # router = DefaultRouter()
 # router.register(r'resetpassword', UserViews.ResetPassword, basename='ResetPassword')
 # urlpatterns = router.urls
-
 urlpatterns = [
     # Vehicle Details
     path('addVehicle/', VehicleViews.addVehicleView.as_view()),
