@@ -1,18 +1,20 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView, UpdateAPIView
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Value
 from django.db.models.functions import Concat
 from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
-from ..models import DriverDetail, AdminPermission, DocumentType
-from ..serializers.DriverDetailsSerializers import DocumentTypeSerializer, VerificationRequestSerializer, VerificationPendingSerializer, ResubmissionSerializer
+from ..models import DriverDetail, DocumentType, User
+from ..serializers.DriverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverDetailsApprovalPendingSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ResubmissionSerializer
 
 class CanVerifyDriver(BasePermission):
     """
@@ -23,9 +25,10 @@ class CanVerifyDriver(BasePermission):
         role = request.user.role
         if role is None:
             return False
-        role_permissions = AdminPermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
+        # role_permissions = AdminPermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
         required_permissions = {"Full Access", "View and Manage Operations", "Review Content and Features"}
-        return bool(set(role_permissions) & required_permissions)
+        # return bool(set(role_permissions) & required_permissions)
+        return bool(required_permissions)
 
 
 class DriverDetailsView(ListCreateAPIView):
@@ -66,84 +69,149 @@ class DriverDetailsView(ListCreateAPIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class DriverList(ListAPIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
+
+    serializer_class = DriverSerializer
+    queryset = DriverDetail.objects.filter(status='approved')
+    filter_backends = [SearchFilter]
+    search_fields = ['user__first_name', 'user__last_name', 'user__mobile_number']
+
+    ordering_fields = ['user__first_name', 'user__last_name', 'created_at', 'verified_at']
+
+
+    ordering_fields = ['user__first_name', 'user__last_name', 'created_at','verified_at']
+    ordering = ['-created_at']
+
+
 class AdminDriverApprovalPendingList(ListAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, CanVerifyDriver]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
-    serializer_class = VerificationPendingSerializer
-    queryset = DriverDetail.objects.filter(status='pending').annotate(driver_name=Concat(F('user__first_name'), Value(' '), F('user__last_name')))
+    serializer_class = DriverVerificationPendingSerializer
+    queryset = DriverDetail.objects.all()
+
+    filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
+
+    search_fields = ['user__first_name', 'user__last_name','status']
+    filterset_fields = ['status']
+
+    ordering_fields = ['user__first_name', 'user__last_name', 'created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        start_date = self.request.query_params.get('start_date')
+        # end_date = self.request.query_params.get('end_date')
+        status = self.request.query_params.get('status', 'pending')
+        driver = DriverDetail.objects.filter(status=status)
+        if start_date:
+            driver = driver.filter(created_at__date=start_date)
+        return driver
 
 
-class AdminDriverApprovalView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, CanVerifyDriver]
+class DriverDetailsApprovalPendingView(RetrieveAPIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
+    lookup_field = 'verification_code'
 
-    def post(self, request, pk):
+    serializer_class = DriverDetailsApprovalPendingSerializer
+
+    def get_object(self):
         try:
-            verification_request = DriverDetail.objects.get(pk=pk)
+            user = User.objects.get(verification_code=self.kwargs['verification_code'])
+            return DriverDetail.objects.get(user=user)
+        except User.DoesNotExist:
+            return Response({"status" : "error", "message" : "User not found."}, status=status.HTTP_400_BAD_REQUEST)
         except DriverDetail.DoesNotExist:
-            return Response({"status" : "error", "message" : 'Verification request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "error", "message" : "Does not applied as Driver."}, status=status.HTTP_400_BAD_REQUEST)
 
-        is_approved = request.data.get("is_approved")
-        rejection_reason = request.data.get("rejection_reason")
 
+class DriverDraftView(ListAPIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = DriverDraftSerializer
+    queryset = User.objects.filter(user_type='driver').exclude(id__in=DriverDetail.objects.values_list('user_id', flat=True))
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['user__first_name', 'user__last_name', 'user__email']
+    ordering = ['created_at']
+
+
+class AdminDriverApprovalView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'verification_code'
+    serializer_class = AdminDriverApprovalSerializer
+
+    def get_object(self):
+        try:
+            user = User.objects.get(verification_code=self.kwargs['verification_code'])
+            return DriverDetail.objects.get(user=user)
+        except User.DoesNotExist:
+            return Response({"status" : "error", "message" : "User not found."}, status=status.HTTP_400_BAD_REQUEST)
+        except DriverDetail.DoesNotExist:
+            return Response({"status" : "error", "message" : "Does not applied as Driver."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def update(self, request, *args, **kwargs):
+        driver = self.get_object()
+        is_approved = request.data['is_approved']
+        rejection_reason = request.data['rejection_reason']
         if is_approved:
-            verification_request.status = 'approved'
-            verification_request.verified_at = timezone.now()
-            verification_request.save()
-            return Response({"status" : "error", "message" : 'Details approved and moved to DriverDetails'}, status=status.HTTP_400_BAD_REQUEST)
+            driver.status = 'approved'
+            driver.verified_at = timezone.now()
+            driver.save()
+            return Response({"status" : "error", "message" : 'Your Details are Approved.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if rejection_reason:
-            verification_request.status = 'rejected'
-            verification_request.rejection_reason = rejection_reason
-            verification_request.save()
+            driver.status = 'rejected'
+            driver.rejection_reason = rejection_reason
+            driver.save()
             data = {'message': 'Details rejected', 'Rejection reason': rejection_reason}
             return Response({"status" : "success" , "data" : data}, status=status.HTTP_200_OK)
         return Response({"status" : "fail", "message" : 'Please provide a rejection reason'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class VerificationRequestResubmissionView(APIView):
+# class VerificationRequestResubmissionView(APIView):
 
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        user = request.user
-        try:
-            driver = DriverDetail.objects.get(user=user)
-        except DriverDetail.DoesNotExist:
-            return Response({"status" : "error", "message" : "Driver details not found"}, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request):
+#         user = request.user
+#         try:
+#             driver = DriverDetail.objects.get(user=user)
+#         except DriverDetail.DoesNotExist:
+#             return Response({"status" : "error", "message" : "Driver details not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = ResubmissionSerializer(driver, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save(user=user)
-            driver = DriverDetail.objects.get(user=user)
-            driver.status = 'pending'
-            driver.save()
-            return Response({"status" : "error", "data" : serializer.data}, status=status.HTTP_200_OK)
-        return Response({"status" : "error", "error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#         serializer = ResubmissionSerializer(driver, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save(user=user)
+#             driver = DriverDetail.objects.get(user=user)
+#             driver.status = 'pending'
+#             driver.save()
+#             return Response({"status" : "error", "data" : serializer.data}, status=status.HTTP_200_OK)
+#         return Response({"status" : "error", "error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerificationRequestResubmissionView(UpdateAPIView):
-    queryset = DriverDetail.objects.all()
-    serializer_class = ResubmissionSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
+    queryset = DriverDetail.objects.all()
+    serializer_class = ResubmissionSerializer
+
     def get_object(self):
-        # Retrieve the DriverDetail for the authenticated user
         user = self.request.user
         return get_object_or_404(DriverDetail, user=user)
 
     def update(self, request, *args, **kwargs):
-        # Get the instance for resubmission
         driver = self.get_object()
 
-        # Pass the data and allow partial updates
         serializer = self.get_serializer(driver, data=request.data, partial=True, context={'user': request.user})
         if serializer.is_valid():
             serializer.save()
-            # Update the status to 'pending'
             driver.status = 'pending'
             driver.save()
             return Response({"status": "success", "data": serializer.data}, status=200)

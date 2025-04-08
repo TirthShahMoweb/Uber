@@ -7,74 +7,100 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
-from ..models import User, AdminPermission, Role, Permission
-from ..serializers.UserSerializers import AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
+from ..models import User, Role, Permission, RolePermission
+from ..serializers.UserSerializers import AdminRightsSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
 from Uber import settings
 
 from django.core.mail import send_mail
 
 
 
-class IsHavingAdminRights(BasePermission):
+class CanEditTeamMember(BasePermission):
     """
     Custom permission to allow only SuperAdmin to give Admin rights to user.
     """
     def has_permission(self, request, view):
         user = request.user
+        user_type = user.user_type
         role = request.user.role
-        permissions = AdminPermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
-        required_permissions = {"Assign Admin Role"}
-        if bool(set(permissions) and required_permissions):
+        if user_type != 'admin':
+            return False
+
+        permissions = RolePermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
+        required_permissions = "edit_team_member"
+        if bool(required_permissions in list(permissions)):
             return True
-        return user and user.is_superuser
+        return False
 
 
-# class adminRights(APIView):
+class adminRights(RetrieveUpdateAPIView):
+    '''
+        Give rights to admin.
+    '''
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, CanEditTeamMember]
+    serializer_class = AdminRightsSerializer
+    lookup_field = 'verification_code'
+
+    def get_queryset(self):
+        return User.objects.filter(verification_code=self.kwargs['verification_code'], user_type='admin')
+
+    def get(self, request, *args, **kwargs):
+        user = self.get_object()
+        data = {
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "mobile_number": user.mobile_number,
+            "role": user.role.role_name
+        }
+        return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        verification_code = kwargs.get('verification_code', None)
+
+        try:
+            user = User.objects.get(verification_code=verification_code)
+        except User.DoesNotExist:
+            return Response({"status": "error", "message": "User not found with this verification code."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            data = {
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "mobile_number": user.mobile_number,
+                "role": user.role.name
+            }
+            return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": "error", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class AssignAdminRoleView(APIView):
 #     '''
-#         Give rights to admin.
+#         Assigning the Admin role to the associated user.
 #     '''
 #     authentication_classes = [JWTAuthentication]
 #     permission_classes = [IsAuthenticated, IsHavingAdminRights]
 
 #     def post(self, request):
 #         try:
-#             role_name = request.data["role_name"]
-#             role = Roles.objects.get(role_name=role_name)
-#         except Roles.DoesNotExist:
-            # return Response({"status" : "error", "message" : "Role does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
-#         permission_name = "Assign Admin Role"
-#         permission = Permissions.objects.get(permission_name=permission_name)
-# api logs app log file and error log file
-#         serializer = AdminRightsSerializer(role, data = request.data, context={'permission':permission}, partial=True)
+#             email = request.data["email"]
+#             user = User.objects.get(email=email)
+#         except User.DoesNotExist:
+#             return Response({
+#                         "status" : "error",
+#                         "message" : "User not found"
+#                         }, status=status.HTTP_404_NOT_FOUND)
+#         serializer = AdminSerializer(user, data = request.data, partial=True)
 #         if serializer.is_valid():
 #             serializer.save()
-
-
-class AssignAdminRoleView(APIView):
-    '''
-        Assigning the Admin role to the associated user.
-    '''
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsHavingAdminRights]
-
-    def post(self, request):
-        try:
-            email = request.data["email"]
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({
-                        "status" : "error",
-                        "message" : "User not found"
-                        }, status=status.HTTP_404_NOT_FOUND)
-        serializer = AdminSerializer(user, data = request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            user.user_type = 'admin'
-            user.save()
-            data = {"message": "Admin role updated successfully."}
-            return Response({"status" : "success" ,"data": data }, status=status.HTTP_200_OK)
-        return Response({"status" : "error","error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#             user.user_type = 'admin'
+#             user.save()
+#             data = {"message": "Admin role updated successfully."}
+#             return Response({"status" : "success" ,"data": data }, status=status.HTTP_200_OK)
+#         return Response({"status" : "error","error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(CreateAPIView):
@@ -90,6 +116,8 @@ class LoginView(CreateAPIView):
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
             user = User.objects.filter(email=email).first()
+            role_permissions = RolePermission.objects.filter(role=user.role)
+            permissions = Permission.objects.filter(permissions__in=role_permissions).values('permission_name')
             if not user:
                 return Response({
                     "status": "error",
@@ -99,7 +127,10 @@ class LoginView(CreateAPIView):
             refresh = RefreshToken.for_user(user)
             data = {
                 "refresh": str(refresh),
-                "access": str(refresh.access_token)
+                "access": str(refresh.access_token),
+                "permissions" : permissions
+                # "role" : user.role
+
             }
 
             return Response({
@@ -144,7 +175,7 @@ class AddTeamMemberView(CreateAPIView):
 
     serializer_class = AddTeamMemberSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -253,15 +284,8 @@ class updateprofile(RetrieveUpdateAPIView):
 
     serializer_class = updateProfileSerializer
 
-    def get_queryset(self):
-
-        user = self.request.user
-        try:
-            user = User.objects.get(user=user)
-        except User.DoesNotExist:
-            return Response({"status" : "error", "message" : "User not Found."}, status=status.HTTP_400_BAD_REQUEST)
-
-        return User.objects.filter(mobile_number = user)
+    def get_object(self):
+        return self.request.user
 
 
 class forgot_password(APIView):

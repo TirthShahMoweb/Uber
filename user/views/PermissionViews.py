@@ -10,6 +10,7 @@ class CreatePermission(CreateAPIView):
     serializer_class = permissionsSerializer
     queryset = Permission.objects.all()
 
+
 class RetrieveUpdateDestroyPermission(RetrieveUpdateDestroyAPIView):
     '''
         create Permission

@@ -24,7 +24,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         return vehicle
 
 
-class VerificationPendingSerializer(serializers.ModelSerializer):
+class VehicleVerificationPendingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = ('id', 'vehicle_image', 'vehicle_rc', 'vehicle_type',)

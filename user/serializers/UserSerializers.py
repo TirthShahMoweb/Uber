@@ -3,7 +3,7 @@ from django.utils.timezone import timedelta
 from django.utils import timezone
 
 from rest_framework import serializers
-from ..models import User, DriverDetail
+from ..models import User, DriverDetail, RolePermission
 
 import secrets, random
 
@@ -36,8 +36,6 @@ class mobileNumberSerializer(serializers.Serializer):
         user.user_type = 'driver'
         user.otp = otp
         user.save()
-        print(otp, "============================================================")
-
         return {"message": "OTP generated successfully", "mobile_number" : mobile_number, "otp": otp, "user": user}
 
 
@@ -127,10 +125,15 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError({"message" : "Email ID does not Exists."})
 
+        if user.user_type != "admin":
+            raise serializers.ValidationError({"message" : "You are not allowed to do signin."})
+
         if not check_password(data['password'], user.password):
+            print(data['password'], user.password)
             raise serializers.ValidationError({"message": "Invalid password or Email Id."})
         print(data,"-------------------------------")
         return data
+
 
 class AdminSerializer(serializers.ModelSerializer):
     class Meta:
@@ -173,7 +176,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 class updateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'mobile_number', 'gender', 'user_type','profile_pic']
+        fields = ['first_name', 'last_name', 'email', 'mobile_number', 'gender', 'user_type',]
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
@@ -218,10 +221,19 @@ class ChangePasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-# class AdminRightsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = AdminPermissions
-#         fields = ('role_name',)
+class AdminRightsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'mobile_number', 'role',)
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(verification_code=self.context['verification_code'])
+        except User.DoesNotExist:
+            return serializers.ValidationError({"message": "User does not exist"})
+
+        if user.user_type != 'admin':
+            raise serializers.ValidationError({"message": "Cant assign role to non-admin user"})
 
 
 class AddTeamMemberSerializer(serializers.ModelSerializer):
@@ -229,18 +241,17 @@ class AddTeamMemberSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name', 'mobile_number', 'email', 'password', 'gender', 'role',)
 
-        def validate(self, data):
-            print(data)
-            if User.objects.filter(email = data["email"]).exists():
-                raise serializers.ValidationError({"email":"Email already exist."})
+    def validate(self, data):
+        if User.objects.filter(email = data["email"]).exists():
+            raise serializers.ValidationError({"email":"Email already exist."})
 
-            if User.objects.filter(mobile_number = data["mobile_number"]).exists():
-                raise serializers.ValidationError({"mobile Number":"Mobile number already exist."})
+        if User.objects.filter(mobile_number = data["mobile_number"]).exists():
+            raise serializers.ValidationError({"mobile Number":"Mobile number already exist."})
 
-            if data['role'] == None:
-                raise serializers.ValidationError({"Role":"Role is not defined."})
-            return data
+        if data['role'] == None:
+            raise serializers.ValidationError({"Role":"Role is not defined."})
+        return data
 
-        def create(self, validated_data):
-            User.objects.create(**validated_data)
-            return validated_data
+    def create(self, validated_data):
+        User.objects.create(**validated_data)
+        return validated_data

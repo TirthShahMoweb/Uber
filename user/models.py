@@ -67,6 +67,7 @@ class VerificationStatus(models.TextChoices):
     REJECTED = 'rejected', 'Rejected'
     APPROVED = 'approved', 'Approved'
 
+
 class DriverDetail(BaseModel):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -78,9 +79,17 @@ class DriverDetail(BaseModel):
     verified_at = models.DateTimeField(null = True)
     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
     rejection_reason = models.TextField(null=True, blank=True)
-
     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_details')
 
+# class DriverRequest(BaseModel):
+
+#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     verifier = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     dob = models.DateField()
+#     lang = models.ManyToManyField(Language, related_name="drivers")  # Many-to-Many Field
+#     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
+#     rejection_reason = models.TextField(null=True, blank=True)
+#     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_details')
 
 class DocumentRequired(BaseModel):
     document_name = models.ForeignKey('DocumentType', on_delete=models.PROTECT, related_name='documents')
@@ -112,6 +121,6 @@ class Permission(BaseModel):
     description = models.TextField()
 
 
-class AdminPermission(BaseModel):
+class RolePermission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permissions = models.ManyToManyField(Permission ,related_name="permissions")

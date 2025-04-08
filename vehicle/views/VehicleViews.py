@@ -11,7 +11,7 @@ from django.utils import timezone
 from user.views.DriverDetailsViews import CanVerifyDriver
 from ..models import Vehicle
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleSerializer, DisplayVehicleSerializer, VerificationPendingSerializer, ResubmissionVehicleSeralizer
+from ..serializers.vehicleSerializers import VehicleSerializer, DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
 class addVehicleView(APIView):
@@ -38,7 +38,7 @@ class displayVerificationList(ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, CanVerifyDriver]
 
-    serializer_class = VerificationPendingSerializer
+    serializer_class = VehicleVerificationPendingSerializer
     queryset = Vehicle.objects.filter(status='pending')
 
 
@@ -141,6 +141,14 @@ class VehicleDestroyView(DestroyAPIView):
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            driver = DriverDetail.objects.get(user=user)
+            return Vehicle.objects.filter(driver=driver, deleted_at=None)
+        except DriverDetail.DoesNotExist:
+            return Vehicle.objects.none()
 
     def destroy(self, request, pk):
         user = request.user
