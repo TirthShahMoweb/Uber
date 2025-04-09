@@ -1,17 +1,20 @@
 from rest_framework import status
 from rest_framework.authentication import authenticate
-from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
-from ..models import User, Role, Permission, RolePermission
-from ..serializers.UserSerializers import AdminRightsSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
+from ..models import User, Role, Permission, RolePermission, DriverDetail
+from ..serializers.UserSerializers import AdminRightsSerializer, ResendOtpSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
 from Uber import settings
 
 from django.core.mail import send_mail
+from django.utils import timezone
+
+import random
 
 
 
@@ -53,7 +56,7 @@ class adminRights(RetrieveUpdateAPIView):
             "mobile_number": user.mobile_number,
             "role": user.role.role_name
         }
-        return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
+        return Response({"status": "success","message":"Successfully Rights given.", "data": data}, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
         verification_code = kwargs.get('verification_code', None)
@@ -61,7 +64,7 @@ class adminRights(RetrieveUpdateAPIView):
         try:
             user = User.objects.get(verification_code=verification_code)
         except User.DoesNotExist:
-            return Response({"status": "error", "message": "User not found with this verification code."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"status": "error", "message":"Validation Error", "errors":{"verification_code":"User not found with this verification code."}}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = self.get_serializer(user, data=request.data, partial=True)
         if serializer.is_valid():
@@ -74,7 +77,7 @@ class adminRights(RetrieveUpdateAPIView):
             }
             return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
         else:
-            return Response({"status": "error", "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class AssignAdminRoleView(APIView):
@@ -121,7 +124,8 @@ class LoginView(CreateAPIView):
             if not user:
                 return Response({
                     "status": "error",
-                    "message": "Invalid Credentials."
+                    "message": "Validation Error",
+                    "errors":{"email" : "Invalid Credentials."}
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             refresh = RefreshToken.for_user(user)
@@ -129,19 +133,14 @@ class LoginView(CreateAPIView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "permissions" : permissions
-                # "role" : user.role
-
             }
-
             return Response({
                 "status": "success",
+                "message" : "Successfully Login.",
                 "data": data
             }, status=status.HTTP_200_OK)
 
-        return Response({
-            "status": "error",
-            "error": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class Mobile_Number(CreateAPIView):
@@ -162,39 +161,73 @@ class Mobile_Number(CreateAPIView):
                 "message": result["message"]
             }
             return Response({
-                "status": "success",
+                "status" : "success",
+                "message" : "Mobile Number verify Successfully.",
                 "data": data,
             }, status=status.HTTP_200_OK)
-        return Response({
-            "status": "error",
-            "error": serializer.errors,
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AddTeamMemberView(CreateAPIView):
 
     serializer_class = AddTeamMemberSerializer
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             data = {
-                "message": "Team Member added successfully.",
                 "data": serializer.data
             }
-
             return Response({
                 "status": "success",
+                "message": "Team Member added successfully.",
                 "data": data
             }, status=status.HTTP_201_CREATED)
 
-        return Response({
-            "status": "error",
-            "error": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResendOtpView(UpdateAPIView):
+    serializer_class = ResendOtpSerializer
+    queryset = User.objects.all()
+
+    def get_object(self):
+        """
+        Override to retrieve the user object based on mobile_number from the request data.
+        """
+        mobile_number = self.request.data.get('mobile_number')
+        if not mobile_number:
+            errors = {"mobile_number" : "Mobile Number required"}
+            return Response({"status": "error", "message": "Validation Error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(mobile_number=mobile_number).first()
+        if not user:
+            errors =  {"mobile_number": "User not found with this mobile number."}
+            return Response({"status": "error", "message": "Validation Error", "errors":errors}, status=status.HTTP_404_NOT_FOUND)
+
+        return user
+
+    def update(self, request, *args, **kwargs):
+        """
+        Generate and store a new OTP for the user and return the response.
+        """
+        user = self.get_object()
+
+        new_otp = random.randint(1000, 9999)
+        user.otp = new_otp
+        user.otp_created_at = timezone.now().time()
+        user.save()
+
+        data = {
+                "mobile_number": user.mobile_number,
+                "otp": new_otp
+        }
+        return Response({"status": "success",
+            "message": "Resend OTP successfully",
+            "data" : data}, status=status.HTTP_200_OK)
 
 
 class OtpVerificationView(CreateAPIView):
@@ -209,20 +242,21 @@ class OtpVerificationView(CreateAPIView):
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid():
-
             user = User.objects.filter(mobile_number = data['mobile_number']).first()
+            driver = DriverDetail.objects.filter(user=user).exists()
             refresh = RefreshToken.for_user(user)
-            response_data = {"message": "OTP verify successfully"}
+            data = {"refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "approved": False}
+            if driver:
+                data["approved"] = True
             return Response({
                 "status": "success",
-                "data": response_data,
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
+                "message": "OTP verify successfully",
+                "data" : data
             }, status=status.HTTP_200_OK)
 
-        return Response({
-            "status": "error",
-            "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignupView(CreateAPIView):
@@ -234,22 +268,18 @@ class SignupView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-
+            user = serializer.save()
             data = {
-                "message": "Signup successful",
-                "data": serializer.data
+                "data": serializer.data,
+                "otp": user.otp,
             }
-
             return Response({
                 "status": "success",
+                "message": "Signup successful",
                 "data": data
             }, status=status.HTTP_201_CREATED)
 
-        return Response({
-            "status": "error",
-            "error": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResetPassword(APIView):
@@ -265,14 +295,14 @@ class ResetPassword(APIView):
         try:
             user = User.objects.get(mobile_number = user)
         except User.DoesNotExist:
-            return Response({"status" : "error","message" : "User not Found."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "error","message" : "Validation Error", "errors":{"user":"User not Found."}}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = ResetPasswordSerializer(data=request.data, partial=True, context={'user':user})
         if serializer.is_valid():
             serializer.save()
-            data = { "message": "Password updated successfully"}
-            return Response({"status" : "success", "data" : data}, status=status.HTTP_200_OK)
-        return Response({"status" : "error","error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            data = {data['mobile_number']: user.mobile_number}
+            return Response({"status" : "success", "message": "Password updated successfully", "data" : data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class updateprofile(RetrieveUpdateAPIView):
@@ -311,7 +341,7 @@ class forgot_password(APIView):
             send_mail(subject, message, settings.EMAIL_HOST_USER, user_email)
             data = {"message": "Reset password link sent to your email"}
             return Response({"status" : "success", "data": data}, status=status.HTTP_200_OK)
-        return Response({"status" : "error", "error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class change_password(APIView):
@@ -326,4 +356,4 @@ class change_password(APIView):
             serializer.save()
             data = {"message" : "Password changed successfully"}
             return Response({"status" : "success", "data" : data}, status=status.HTTP_200_OK)
-        return Response({"status" : "error", "error" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User , Language, DocumentType, DocumentRequired ,DriverDetail, Role, Permission, RolePermission
+from .models import User , Language, DriverRequest, DocumentType, DocumentRequired ,DriverDetail, Role, Permission, RolePermission
 
 
 
@@ -12,3 +12,4 @@ admin.site.register(Permission)
 admin.site.register(RolePermission)
 admin.site.register(DocumentRequired)
 admin.site.register(DocumentType)
+admin.site.register(DriverRequest)

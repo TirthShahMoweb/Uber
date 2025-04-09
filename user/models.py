@@ -40,6 +40,7 @@ class User(AbstractUser, BaseModel):
     profile_pic = models.ImageField(upload_to=unique_profile_pic_path , blank=True, null=True)
     thumbnail_pic = models.ImageField(upload_to='thumbnail_pics/', blank=True, null=True)
     otp = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1000), MaxValueValidator(9999)])
+    otp_created_at = models.TimeField(null=True, blank=True)
     verification_code = models.CharField(max_length=128 , null=True, blank=True)
     verification_code_created_at = models.DateTimeField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices = GenderChoices, null=True, blank=True)
@@ -72,28 +73,33 @@ class DriverDetail(BaseModel):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     dob = models.DateField()
-    lang = models.ManyToManyField(Language, related_name="drivers")  # Many-to-Many Field
+    lang = models.ManyToManyField(Language, related_name="driver_details_lang")
     in_use = models.ForeignKey('vehicle.Vehicle', on_delete=models.SET_NULL, null=True, blank=True)
     amount_remaining = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     verified_at = models.DateTimeField(null = True)
+    # status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
+    # rejection_reason = models.TextField(null=True, blank=True)
+    verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_detail_documents')
+
+# status
+# message
+# data
+
+class DriverRequest(BaseModel):
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_user")
+    verifier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_verifier", null=True, blank=True)
+    dob = models.DateField()
+    lang = models.ManyToManyField(Language, related_name="driver_request_lang")
     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
     rejection_reason = models.TextField(null=True, blank=True)
-    verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_details')
+    # verified_at = models.DateTimeField(null = True)
+    verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_request_documents')
 
-# class DriverRequest(BaseModel):
-
-#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     verifier = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     dob = models.DateField()
-#     lang = models.ManyToManyField(Language, related_name="drivers")  # Many-to-Many Field
-#     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
-#     rejection_reason = models.TextField(null=True, blank=True)
-#     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_details')
 
 class DocumentRequired(BaseModel):
     document_name = models.ForeignKey('DocumentType', on_delete=models.PROTECT, related_name='documents')
-    # document_name = models.CharField(max_length=255)
     document_text = models.TextField(null=True, blank=True)
     document_image = models.ImageField(upload_to=unique_aadhar_photos_path, null=True, blank=True)
 

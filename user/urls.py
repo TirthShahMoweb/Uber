@@ -14,7 +14,7 @@ urlpatterns = [
     path('addTeamMemberView', UserViews.AddTeamMemberView.as_view()),
     path('mobile_number', UserViews.Mobile_Number.as_view()),
     path('otp-verification', UserViews.OtpVerificationView.as_view()),
-
+    path('resendOtpView', UserViews.ResendOtpView.as_view()),
 
     # Roles
     path('createRoles', RolesViews.CreateRoles.as_view()),
@@ -33,14 +33,15 @@ urlpatterns = [
     path('forgot-password/<str:verification_code>', UserViews.change_password.as_view()),
 
     # Driver Details
-    path('adminDriverApprovalPendingList', DriverDetailsViews.AdminDriverApprovalPendingList.as_view()),
+    path('adminDriverStatusList', DriverDetailsViews.AdminDriverStatusList.as_view()),
     path('add-driver-details', DriverDetailsViews.DriverDetailsView.as_view()),
     path('admin-verify-driver/<str:verification_code>', DriverDetailsViews.AdminDriverApprovalView.as_view(), name = 'driver-verification-approval'),
-    path('driver-details/resubmit', DriverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
+    # path('driver-details/resubmit', DriverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
     path('driverDetailsApprovalPendingView/<str:verification_code>', DriverDetailsViews.DriverDetailsApprovalPendingView.as_view()),
-    path('driverList', DriverDetailsViews.DriverList.as_view()),
     path('driverDraftView', DriverDetailsViews.DriverDraftView.as_view()),
+    path('driverList', DriverDetailsViews.DriverList.as_view()),
     path('languagesListView', LanguageViews.LanguageListView.as_view()),
+    path('userCountView', DriverDetailsViews.UserCountView.as_view()),
 
     # # Vehicle Details
     # path('addVehicle/', VehicleViews.addVehicleView.as_view()),
