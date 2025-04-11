@@ -1,9 +1,22 @@
 from django.urls import reverse
 
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 
 from ..models import DriverDetail, DocumentRequired, User, DocumentType, DriverRequest
 
+
+
+class CustomValidationError(APIException):
+    status_code = 400
+    default_detail = "Validation Error"
+
+    def __init__(self, errors, message="Validation Error"):
+        self.detail = {
+            "status": "error",
+            "message": message,
+            "errors": errors
+        }
 
 
 class VerificationRequestSerializer(serializers.ModelSerializer):
@@ -16,14 +29,18 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if DriverRequest.objects.filter(user=self.context['user'], status='pending').exists():
             errors = {"user" : "You have already applied as a driver. You cannot apply again."}
-            raise serializers.ValidationError({"status":"error","message":"Validation Errors", "errors": errors})
+            raise CustomValidationError(errors)
+
         return data
 
     def create(self, validated_data):
-
-        if validated_data["profile_pic"]:
+        if validated_data['profile_pic']:
             user = User.objects.filter(mobile_number=self.context['user']).first()
-            user.profile_pic = validated_data["profile_pic"]
+            # if validated_data['profile_pic'].content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
+            #     errors = {"profile_pic":"Profile Picture must be an image."}
+            #     raise CustomValidationError(errors)
+
+            user.profile_pic = validated_data['profile_pic']
             user.save()
 
         documentType = DocumentType.objects.filter(deleted_at = None)
@@ -34,31 +51,39 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
             if field_name in data:
                 if field_name=="licence_number":
                     if len(data[field_name])!=20:
-                        raise serializers.ValidationError(f"{doc_type.document_label} must be of 20 letters.")
+                        errors = {field_name: f"{doc_type.document_label} must be of 20 letters."}
+                        raise CustomValidationError(errors)
 
                 field_value = data[field_name]
                 if doc_type.field_type == "image":
-                    if field_value.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
-                        raise serializers.ValidationError({"status":"errors","message":"Validation Error","errors":{f"{field_name}":f"{doc_type.document_label} must be an image."}})
+                    if field_value != 'undefined':
+                        if field_value.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
+                            errors = {f"{field_name}":f"{doc_type.document_label} must be an image."}
+                            raise CustomValidationError(errors)
+                        if field_value.size > 5 * 1024 * 1024 :
+                            errors = {f"{field_name}":f"{doc_type.document_label} size must be less than or equal to 5 MB."}
+                            raise CustomValidationError(errors)
 
-                    if field_value.size > 5 * 1024 * 1024 :
-                        raise serializers.ValidationError({"status":"errors","message":"Validation Error","errors":{f"{doc_type.document_label} size must be less than or equal to 5 KB."}})
-
-                    document = DocumentRequired.objects.create(
-                    document_name=doc_type, document_image=field_value)
+                        document = DocumentRequired.objects.create(
+                        document_name=doc_type, document_image=field_value)
+                        documents.append(document)
 
                 if doc_type.field_type == "text":
                     if " " in field_value:
-                        raise serializers.ValidationError({"status":"errors","message":"Validation Error","errors":{f"{doc_type.document_label} does not contain White Space."}})
+                        errors = {f"{field_name}":f"{doc_type.document_label} does not contain White Space."}
+                        raise CustomValidationError(errors)
 
                     if type(field_value) is not str:
-                        raise serializers.ValidationError({"status":"errors","message":"Validation Error","errors":{f"{doc_type.document_label} must be a string."}})
+                        errors = {f"{field_name}":f"{doc_type.document_label} must be a string."}
+                        raise CustomValidationError(errors)
 
                     document = DocumentRequired.objects.create(
                     document_name=doc_type, document_text=field_value)
-                documents.append(document)
+                    documents.append(document)
+
             elif doc_type.is_required:
-                raise serializers.ValidationError({"status":"errors","message":"Validation Error","errors":{f"{doc_type.document_label} is Required."}})
+                errors= {f"{field_name}":f"{doc_type.document_label} is Required."}
+                raise CustomValidationError(errors)
 
         driver = DriverRequest.objects.create(user=self.context['user'], dob=validated_data["dob"])
 
@@ -82,8 +107,8 @@ class DriverSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source = 'user.last_name')
     mobile_number = serializers.CharField(source = 'user.mobile_number')
     class Meta:
-        model = DriverDetail
-        fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'created_at', 'verified_at')
+        model = DriverRequest
+        fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'created_at', 'action_at',)
 
 
 class DocumentRequiredSerializer(serializers.ModelSerializer):
@@ -107,13 +132,12 @@ class AdminDriverApprovalSerializer(serializers.Serializer):
 
 class DriverVerificationPendingSerializer(serializers.ModelSerializer):
     mobile_number = serializers.CharField(source = 'user.mobile_number')
-    verification_code = serializers.CharField(source = 'user.verification_code')
     first_name = serializers.CharField(source = 'user.first_name')
     last_name = serializers.CharField(source = 'user.last_name')
 
     class Meta:
         model = DriverRequest
-        fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'status', 'created_at', 'verification_code')
+        fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'status', 'created_at',)
         # ref_name = "DriverDetailsVerificationPending"
         # depth = 2
 

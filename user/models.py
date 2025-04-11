@@ -94,7 +94,7 @@ class DriverRequest(BaseModel):
     lang = models.ManyToManyField(Language, related_name="driver_request_lang")
     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
     rejection_reason = models.TextField(null=True, blank=True)
-    # verified_at = models.DateTimeField(null = True)
+    action_at = models.DateTimeField(null = True, blank=True)
     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_request_documents')
 
 

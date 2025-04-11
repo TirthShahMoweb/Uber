@@ -14,10 +14,8 @@ def create_thumbnail(sender, instance, **kwargs):
     if instance.profile_pic and not instance.thumbnail_pic:
         thumbnail_size = (100, 100)
         profile_pic_path = instance.profile_pic.path
-        print(profile_pic_path)
         file_name = os.path.basename(profile_pic_path)
         thumbnail_pic_path = os.path.join('media/', 'thumbnail_pics/', file_name)
-        print(thumbnail_pic_path)
         os.makedirs(os.path.dirname(thumbnail_pic_path), exist_ok=True)
 
         with Image.open(profile_pic_path) as img:
@@ -26,5 +24,4 @@ def create_thumbnail(sender, instance, **kwargs):
 
         if not instance.thumbnail_pic:
             instance.thumbnail_pic = os.path.basename(thumbnail_pic_path)
-            print(instance.thumbnail_pic,"===================")
             instance.save()

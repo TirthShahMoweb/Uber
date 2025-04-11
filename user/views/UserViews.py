@@ -270,8 +270,7 @@ class SignupView(CreateAPIView):
         if serializer.is_valid():
             user = serializer.save()
             data = {
-                "data": serializer.data,
-                "otp": user.otp,
+                "otp": user.otp
             }
             return Response({
                 "status": "success",

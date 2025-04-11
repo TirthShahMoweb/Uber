@@ -52,7 +52,7 @@ class DriverDetailsView(ListCreateAPIView):
             "status": "success",
             "message": "Document types fetched successfully",
             "data": data
-        }, status=status.HTTP_200_OK)
+        }, status=status.HTTP_201_CREATED)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -60,12 +60,11 @@ class DriverDetailsView(ListCreateAPIView):
 
         if serializer.is_valid():
             serializer.save()
-            data = {"data":serializer.data}
-            return Response({
+            data = {
                 "status": "success",
                 "message": "Details submitted for verification",
-                "data": data
-            }, status=status.HTTP_201_CREATED)
+                "data" : "Driver details submitted successfully"}
+            return Response(data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -75,7 +74,7 @@ class DriverList(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     serializer_class = DriverSerializer
-    queryset = DriverDetail.objects.all()
+    queryset = DriverRequest.objects.filter(status='approved')
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['user__first_name', 'user__last_name', 'user__mobile_number']
 
@@ -87,8 +86,8 @@ class DriverList(ListAPIView):
 
 
 class AdminDriverStatusList(ListAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     serializer_class = DriverVerificationPendingSerializer
     queryset = DriverRequest.objects.all()
@@ -139,16 +138,13 @@ class UserCountView(RetrieveAPIView):
 class DriverDetailsApprovalPendingView(RetrieveAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_field = 'verification_code'
+    lookup_field = 'id'
 
     serializer_class = DriverDetailsApprovalPendingSerializer
 
     def get_object(self):
         try:
-            user = User.objects.get(verification_code=self.kwargs['verification_code'])
-            return DriverRequest.objects.get(user=user, status='pending')
-        except User.DoesNotExist:
-            return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "User not found."}}, status=status.HTTP_400_BAD_REQUEST)
+            return DriverRequest.objects.get(id=self.kwargs['id'])
         except DriverRequest.DoesNotExist:
             return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -168,15 +164,12 @@ class DriverDraftView(ListAPIView):
 class AdminDriverApprovalView(UpdateAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_field = 'verification_code'
+    lookup_field = 'id'
     serializer_class = AdminDriverApprovalSerializer
 
     def get_object(self):
         try:
-            user = User.objects.get(verification_code=self.kwargs['verification_code'])
-            return DriverRequest.objects.get(user=user, status='pending')
-        except User.DoesNotExist:
-            return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "User not found."}}, status=status.HTTP_400_BAD_REQUEST)
+            return DriverRequest.objects.get(id=self.kwargs['id'])
         except DriverRequest.DoesNotExist:
             return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -189,6 +182,7 @@ class AdminDriverApprovalView(UpdateAPIView):
         if is_approved:
             driver_request.status = 'approved'
             driver_request.verifier = admin_user
+            driver_request.action_at = timezone.now()
             driver_request.save()
 
             driver_detail = DriverDetail.objects.create(

@@ -35,9 +35,9 @@ urlpatterns = [
     # Driver Details
     path('adminDriverStatusList', DriverDetailsViews.AdminDriverStatusList.as_view()),
     path('add-driver-details', DriverDetailsViews.DriverDetailsView.as_view()),
-    path('admin-verify-driver/<str:verification_code>', DriverDetailsViews.AdminDriverApprovalView.as_view(), name = 'driver-verification-approval'),
+    path('admin-verify-driver/<int:id>', DriverDetailsViews.AdminDriverApprovalView.as_view(), name = 'driver-verification-approval'),
     # path('driver-details/resubmit', DriverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
-    path('driverDetailsApprovalPendingView/<str:verification_code>', DriverDetailsViews.DriverDetailsApprovalPendingView.as_view()),
+    path('driverDetailsApprovalPendingView/<int:id>', DriverDetailsViews.DriverDetailsApprovalPendingView.as_view()),
     path('driverDraftView', DriverDetailsViews.DriverDraftView.as_view()),
     path('driverList', DriverDetailsViews.DriverList.as_view()),
     path('languagesListView', LanguageViews.LanguageListView.as_view()),
