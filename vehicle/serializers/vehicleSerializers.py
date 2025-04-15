@@ -2,15 +2,22 @@ from django.urls import reverse
 
 from rest_framework import serializers
 
-from ..models import Vehicle
+from ..models import Vehicle, VehicleRequest
 from user.models import DriverDetail
 
 
 
 class VehicleSerializer(serializers.ModelSerializer):
+    vehicle_front_image = serializers.ImageField(required=True)
+    vehicle_back_image = serializers.ImageField(required=True)
+    vehicle_leftSide_image = serializers.ImageField(required=True)
+    vehicle_rightSide_image = serializers.ImageField(required=True)
+    vehicle_rc_front_image = serializers.ImageField(required=True)
+    vehicle_rc_back_image = serializers.ImageField(required=True)
+
     class Meta:
-        model = Vehicle
-        fields = ('vehicle_image', 'vehicle_rc', 'vehicle_type',)
+        model = VehicleRequest
+        fields = ('vehicle_number', 'vehicle_type', 'vehicle_type',)
 
     def create(self, validated_data):
         user = self.context['user']
@@ -20,7 +27,7 @@ class VehicleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Driver details not found for this user.")
 
 
-        vehicle = Vehicle.objects.create(driver=driver, **validated_data)
+        vehicle = VehicleRequest.objects.create(driver=driver, **validated_data)
         return vehicle
 
 

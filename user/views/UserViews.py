@@ -120,7 +120,7 @@ class LoginView(CreateAPIView):
             password = serializer.validated_data['password']
             user = User.objects.filter(email=email).first()
             role_permissions = RolePermission.objects.filter(role=user.role)
-            permissions = Permission.objects.filter(permissions__in=role_permissions).values('permission_name')
+            permissions = Permission.objects.filter(permissions__in=role_permissions).values_list('permission_name')
             if not user:
                 return Response({
                     "status": "error",
@@ -269,8 +269,13 @@ class SignupView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+
             data = {
-                "otp": user.otp
+                "otp": user.otp,
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "mobile_number": user.mobile_number,
             }
             return Response({
                 "status": "success",
@@ -317,42 +322,60 @@ class updateprofile(RetrieveUpdateAPIView):
         return self.request.user
 
 
-class forgot_password(APIView):
+class ForgotPasswordView(CreateAPIView):
+    serializer_class = ForgotPasswordSerializer
 
-    def post(self, request):
-        '''
-            Forgot Password
-        '''
-        data = request.data
-        serializer = ForgotPasswordSerializer(data=data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            user = User.objects.get(email=user['email'])
+            validated_data = serializer.save()
+            email = validated_data['email']
+            user = User.objects.get(email=email)
             verification_code = user.verification_code
-            link = f"http://127.0.0.1:8000/forgot-password/{verification_code}/"
-            subject = "Reset password link"
-            message = f'''
-                        Click on the link to reset your password
-                        {link}
-                        '''
-            user_email = [data['email']]
-
+            link = f"http://192.168.50.11:5173/admin/forgot-password-link/{verification_code}"
+            subject = "Reset Password Link"
+            message = (
+                f"Click on the link below to reset your password:\n\n"
+                f"{link}\n\n"
+                f"If you did not request this, please ignore this email."
+            )
+            user_email = [email]
             send_mail(subject, message, settings.EMAIL_HOST_USER, user_email)
-            data = {"message": "Reset password link sent to your email"}
-            return Response({"status" : "success", "data": data}, status=status.HTTP_200_OK)
+            data = {
+                "email": user.email,
+                "link": link
+                }
+            return Response({"status": "success", "message": "Reset password link sent to your email. If Register.","data" : data },status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class change_password(UpdateAPIView):
+    '''
+        Change Password using UpdateAPIView
+    '''
+    serializer_class = ChangePasswordSerializer
+    lookup_field = 'verification_code'
 
-class change_password(APIView):
 
-    def post(self, request, verification_code=None):
+    def get_object(self):
+        verification_code = self.kwargs['verification_code']
+        try:
+            user = User.objects.get(verification_code=verification_code)
+            return user
+        except User.DoesNotExist:
+            return Response({"status" : "error", "message": "User not found with this verification code."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request,*args, **kwargs):
         '''
             Change Password
         '''
-        data = request.data
-        serializer = ChangePasswordSerializer(data=data, context={'verification_code':verification_code})
+        verification_code = self.kwargs['verification_code']
+        user = self.get_object()
+        serializer = self.get_serializer(user,data=request.data, context={'verification_code': verification_code})
         if serializer.is_valid():
-            serializer.save()
-            data = {"message" : "Password changed successfully"}
-            return Response({"status" : "success", "data" : data}, status=status.HTTP_200_OK)
+            user = serializer.save()
+            data = {
+                "email": user.email,
+                "password": user.password
+            }
+            return Response({"status" : "success","message" : "Password changed successfully", "data" : data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

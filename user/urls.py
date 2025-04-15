@@ -29,7 +29,7 @@ urlpatterns = [
     # User Details
     path('updateprofile', UserViews.updateprofile.as_view()),
     path('resetpassword/<str:verification_code>', UserViews.ResetPassword.as_view()),
-    path('forgotpassword', UserViews.forgot_password.as_view()),
+    path('forgotpassword', UserViews.ForgotPasswordView.as_view()),
     path('forgot-password/<str:verification_code>', UserViews.change_password.as_view()),
 
     # Driver Details

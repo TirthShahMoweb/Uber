@@ -69,24 +69,25 @@ class OtpVerificationSerializer(serializers.Serializer):
             raise CustomValidationError(errors)
 
         if not otp.isdigit():
-            errors = {"OTP": "OTP must contain only numeric characters."}
+            errors = {"otp": "OTP must contain only numeric characters."}
             raise CustomValidationError(errors)
 
         if len(otp) != 4:
-            errors = {"OTP": "OTP must be exactly 4 digits long."}
+            errors = {"otp": "OTP must be exactly 4 digits long."}
             raise CustomValidationError(errors)
 
         otp = int(otp)
         user = User.objects.filter(mobile_number = mobile_number).first()
+
+        if user.otp != otp:
+            errors = {"otp":  "Invalid OTP."}
+            raise CustomValidationError(errors)
 
         if DriverRequest.objects.filter(user = user).exists():
             if DriverRequest.objects.filter(user = user, status='pending').exists():
                 errors = {"login":  "Your application is under verification."}
                 raise CustomValidationError(errors)
 
-        if user.otp != otp:
-            errors = {"OTP":  "Invalid OTP."}
-            raise CustomValidationError(errors)
 
         return data
 
@@ -148,14 +149,14 @@ class LoginSerializer(serializers.Serializer):
         user = User.objects.filter(email = data['email']).first()
         if not user:
             errors = {"email" : "Email ID does not Exists."}
-            raise CustomValidationError({"email": "Email ID does not exist."})
+            raise CustomValidationError(errors)
 
         if user.user_type != "admin":
-            errors = {"user_type" : "User type is not admin. Not allowed to login."}
+            errors = {"invalid_credential" : "You are not authorized to login."}
             raise CustomValidationError(errors)
 
         if not check_password(data['password'], user.password):
-            errors = {"password" : "Invalid password or Email Id."}
+            errors = {"invalid_credential" : "Invalid password or Email Id."}
             raise CustomValidationError(errors)
         return data
 
@@ -215,6 +216,11 @@ class ForgotPasswordSerializer(serializers.Serializer):
             errors = {"email":  "Email not found."}
             raise CustomValidationError(errors)
 
+        user = User.objects.get(email=data['email'])
+        if user.user_type != 'admin':
+            errors = {"email": "You are not authorized to reset password."}
+            raise CustomValidationError(errors)
+
         return data
 
     def create(self, validated_data):
@@ -230,27 +236,32 @@ class ChangePasswordSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(max_length=128)
 
     def validate(self, data):
-        user = User.objects.get(verification_code=self.context['verification_code'])
+        try:
+            user = User.objects.get(verification_code=self.context['verification_code'])
+        except User.DoesNotExist:
+            errors = {"verification_code": "Verification code is invalid."}
+            raise CustomValidationError(errors)
+
         verification_time = user.verification_code_created_at
         if timezone.now() > verification_time + timedelta(days=1):
             errors = {"password": "Reset password link has expired"}
             raise CustomValidationError(errors)
 
-        if not User.objects.filter(verification_code = self.context['verification_code']).exists():
-            errors = {"verification_code": "Invalid Reset Key"}
+        if data['password'] != data['confirm_password']:
+            errors = {"password":  "Password and Confirm Password is not same."}
             raise CustomValidationError(errors)
 
-        if data['password'] != data['confirm_password']:
-            errors = {"verification_code":  "Password and Confirm Password is not same."}
+        if user.check_password(data['password']):  # Compare hashed password with new password
+            errors = {"password": "New password cannot be the same as the old password."}
             raise CustomValidationError(errors)
 
         return data
 
-    def create(self, validated_data):
-        user = User.objects.get(verification_code=self.context['verification_code'])
-        user.set_password(validated_data['password'])
-        user.save()
-        return validated_data
+    def update(self, instance, validated_data):
+        # user = User.objects.get(verification_code=self.context['verification_code'])
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance
 
 
 class AdminRightsSerializer(serializers.ModelSerializer):

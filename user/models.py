@@ -86,10 +86,11 @@ class DriverDetail(BaseModel):
 # message
 # data
 
+# action_by
 class DriverRequest(BaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_user")
-    verifier = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_verifier", null=True, blank=True)
+    action_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_verifier", null=True, blank=True)
     dob = models.DateField()
     lang = models.ManyToManyField(Language, related_name="driver_request_lang")
     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
@@ -114,7 +115,6 @@ class DocumentType(BaseModel):
     document_label = models.CharField(max_length=255)
     is_required = models.BooleanField(default=True)
     field_type = models.CharField(max_length=20, choices=DocumentFieldType)
-    deleted_at = models.DateTimeField(null=True,  blank=True)
 
 
 class Role(BaseModel):

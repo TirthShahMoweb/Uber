@@ -13,24 +13,30 @@ from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
-from ..models import DriverDetail, DocumentType, User, DriverRequest
+from ..models import DriverDetail, DocumentType, User, DriverRequest, RolePermission, Permission
 from ..serializers.DriverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverDetailsApprovalPendingSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
 
 
-
-class CanVerifyDriver(BasePermission):
+class DynamicPermission(BasePermission):
     """
-    Custom permission to allow only users with a role having specific permissions to verify drivers.
+        DynamicPermission for all types of permissions.
     """
+    def __init__(self, required_permissions):
+        self.required_permissions = required_permissions
 
     def has_permission(self, request, view):
+        print("request.user", request.user)
         role = request.user.role
         if role is None:
             return False
-        # role_permissions = AdminPermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
-        required_permissions = {"Full Access", "View and Manage Operations", "Review Content and Features"}
-        # return bool(set(role_permissions) & required_permissions)
-        return bool(required_permissions)
+        if request.user.user_type != 'admin':
+            return False
+        permissions = RolePermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
+        required_permissions = self.required_permissions
+        print("permissions", permissions, "required_permissions", required_permissions)
+        if bool(required_permissions in list(permissions)):
+            return True
+        return False
 
 
 class DriverDetailsView(ListCreateAPIView):
@@ -52,7 +58,7 @@ class DriverDetailsView(ListCreateAPIView):
             "status": "success",
             "message": "Document types fetched successfully",
             "data": data
-        }, status=status.HTTP_201_CREATED)
+        }, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         user = request.user
@@ -76,18 +82,35 @@ class DriverList(ListAPIView):
     serializer_class = DriverSerializer
     queryset = DriverRequest.objects.filter(status='approved')
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['user__first_name', 'user__last_name', 'user__mobile_number']
+    search_fields = ['user__first_name', 'user__last_name']
 
-    ordering_fields = ['user__first_name', 'user__last_name', 'created_at', 'verified_at']
-
-
-    ordering_fields = ['user__first_name', 'user__last_name', 'created_at','verified_at']
+    ordering_fields = ['user__first_name', 'user__last_name', 'created_at', 'action_at']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        start_date = self.request.query_params.get('start_date')
+        driver = DriverRequest.objects.filter(status='approved')
+        if start_date:
+            driver = DriverRequest.objects.filter(created_at__date=start_date)
+        return driver
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+
+    #     if not queryset.exists():
+    #         return Response({"status": "success", "message": "No Driver Found"}, status=200)
+
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response({
+    #         "status": "success",
+    #         "message": "Drivers fetched successfully",
+    #         "data": serializer.data
+    #     }, status=200)
 
 
 class AdminDriverStatusList(ListAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     serializer_class = DriverVerificationPendingSerializer
     queryset = DriverRequest.objects.all()
@@ -102,19 +125,22 @@ class AdminDriverStatusList(ListAPIView):
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date')
-        # end_date = self.request.query_params.get('end_date')
         status = self.request.query_params.get('status')
-        driver = DriverRequest.objects.filter(status=status)
+        driver = DriverRequest.objects.all()
+        if status:
+            driver = driver.filter(status=status)
+
         if start_date:
             driver = driver.filter(created_at__date=start_date)
+
         return driver
 
 
-class UserCountView(RetrieveAPIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+class UserCountView(ListAPIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         customer_count = User.objects.filter(user_type='customer').count()
         driver_count = DriverDetail.objects.all().count()
         pending_driver_request_count = DriverRequest.objects.filter(status='pending').count()
@@ -150,29 +176,28 @@ class DriverDetailsApprovalPendingView(RetrieveAPIView):
 
 
 class DriverDraftView(ListAPIView):
-
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = DriverDraftSerializer
     drivers = DriverRequest.objects.values_list('user_id', flat=True)
     queryset = User.objects.filter(user_type='driver').exclude(id__in=drivers)
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['user__first_name', 'user__last_name', 'user__email']
+    filter_backends = [OrderingFilter]
     ordering = ['created_at']
 
 
 class AdminDriverApprovalView(UpdateAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     lookup_field = 'id'
     serializer_class = AdminDriverApprovalSerializer
+
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_edit')]
 
     def get_object(self):
         try:
             return DriverRequest.objects.get(id=self.kwargs['id'])
         except DriverRequest.DoesNotExist:
             return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
-
 
     def update(self, request, *args, **kwargs):
         driver_request  = self.get_object()
@@ -181,7 +206,7 @@ class AdminDriverApprovalView(UpdateAPIView):
         rejection_reason = request.data.get('rejection_reason')
         if is_approved:
             driver_request.status = 'approved'
-            driver_request.verifier = admin_user
+            driver_request.action_by = admin_user
             driver_request.action_at = timezone.now()
             driver_request.save()
 
@@ -197,7 +222,7 @@ class AdminDriverApprovalView(UpdateAPIView):
         if rejection_reason:
             driver_request.status = 'rejected'
             driver_request.rejection_reason = rejection_reason
-            driver_request.verifier = admin_user
+            driver_request.action_by = admin_user
             driver_request.save()
             data = {'Rejection reason': rejection_reason}
             return Response({"status" : "success" , 'message': 'Details rejected' , "data" : data}, status=status.HTTP_200_OK)

@@ -36,12 +36,15 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if validated_data['profile_pic']:
             user = User.objects.filter(mobile_number=self.context['user']).first()
-            # if validated_data['profile_pic'].content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
-            #     errors = {"profile_pic":"Profile Picture must be an image."}
-            #     raise CustomValidationError(errors)
+            if validated_data['profile_pic'].content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
+                errors = {"profile_pic":"Profile Picture must be an image."}
+                raise CustomValidationError(errors)
 
             user.profile_pic = validated_data['profile_pic']
             user.save()
+        else:
+            errors = {"profile_pic":"Profile Picture is Required."}
+            raise CustomValidationError(errors)
 
         documentType = DocumentType.objects.filter(deleted_at = None)
         documents = []
@@ -56,17 +59,19 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
 
                 field_value = data[field_name]
                 if doc_type.field_type == "image":
-                    if field_value != 'undefined':
-                        if field_value.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
-                            errors = {f"{field_name}":f"{doc_type.document_label} must be an image."}
-                            raise CustomValidationError(errors)
-                        if field_value.size > 5 * 1024 * 1024 :
-                            errors = {f"{field_name}":f"{doc_type.document_label} size must be less than or equal to 5 MB."}
-                            raise CustomValidationError(errors)
+                    print("field_value", field_value, type(field_value), type(field_value),field_name)
+                    if type(field_value) is str:
+                        raise CustomValidationError({f"{field_name}":f"{doc_type.document_label} must Required and it should be an image."})
+                    if field_value.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
+                        errors = {f"{field_name}":f"{doc_type.document_label} must be an image."}
+                        raise CustomValidationError(errors)
+                    if field_value.size > 5 * 1024 * 1024 :
+                        errors = {f"{field_name}":f"{doc_type.document_label} size must be less than or equal to 5 MB."}
+                        raise CustomValidationError(errors)
 
-                        document = DocumentRequired.objects.create(
-                        document_name=doc_type, document_image=field_value)
-                        documents.append(document)
+                    document = DocumentRequired.objects.create(
+                    document_name=doc_type, document_image=field_value)
+                    documents.append(document)
 
                 if doc_type.field_type == "text":
                     if " " in field_value:
@@ -84,6 +89,10 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
             elif doc_type.is_required:
                 errors= {f"{field_name}":f"{doc_type.document_label} is Required."}
                 raise CustomValidationError(errors)
+
+        if not validated_data["dob"]:
+            errors= {"dob":"Date of Birth is Required."}
+            raise CustomValidationError(errors)
 
         driver = DriverRequest.objects.create(user=self.context['user'], dob=validated_data["dob"])
 
@@ -106,6 +115,7 @@ class DriverSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source = 'user.first_name')
     last_name = serializers.CharField(source = 'user.last_name')
     mobile_number = serializers.CharField(source = 'user.mobile_number')
+
     class Meta:
         model = DriverRequest
         fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'created_at', 'action_at',)

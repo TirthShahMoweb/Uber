@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, DestroyAPIView
+from rest_framework.generics import ListAPIView, DestroyAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -8,13 +8,14 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from user.views.DriverDetailsViews import CanVerifyDriver
+# from user.views.DriverDetailsViews import CanVerifyDriver
 from ..models import Vehicle
 from user.models import DriverDetail
 from ..serializers.vehicleSerializers import VehicleSerializer, DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
-class addVehicleView(APIView):
+
+class addVehicleView(CreateAPIView):
     '''
         Add vehicle details for verification
     '''
@@ -35,8 +36,8 @@ class displayVerificationList(ListAPIView):
     '''
         Get all vehicle verification requests
     '''
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, CanVerifyDriver]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated, CanVerifyDriver]
 
     serializer_class = VehicleVerificationPendingSerializer
     queryset = Vehicle.objects.filter(status='pending')
@@ -46,8 +47,8 @@ class vehicleverificationRequest(APIView):
     '''
         Get all vehicle verification requests
     '''
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, CanVerifyDriver]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated, CanVerifyDriver]
 
     def post(self, request, pk):
         try:
