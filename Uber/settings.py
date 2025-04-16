@@ -192,7 +192,7 @@ EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
 EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=2),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 

@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (
 # urlpatterns = router.urls
 urlpatterns = [
     # Vehicle Details
-    # path('addVehicle/', VehicleViews.addVehicleView.as_view()),
+    path('addVehicleView', VehicleViews.addVehicleView.as_view()),
     # path('adminVehicleApprovalPendingList/', VehicleViews.displayVerificationList.as_view()),
     # path('admin-verify-vehicle/<int:pk>/', VehicleViews.vehicleverificationRequest.as_view(),name = 'vehicle-verification-approval'),
     # path('resubmitVehicleView/<int:pk>/', VehicleViews.resubmitVehicleView.as_view(), name = 'vehicle-resubmission'),

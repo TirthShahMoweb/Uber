@@ -195,7 +195,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         return data
 
-    def create(self , validated_data):
+    def update(self , instance, validated_data):
         user = User.objects.get(mobile_number = self.context['user'])
         user.set_password(validated_data['new_password'])
         user.save()

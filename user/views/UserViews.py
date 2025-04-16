@@ -121,6 +121,7 @@ class LoginView(CreateAPIView):
             user = User.objects.filter(email=email).first()
             role_permissions = RolePermission.objects.filter(role=user.role)
             permissions = Permission.objects.filter(permissions__in=role_permissions).values_list('permission_name')
+
             if not user:
                 return Response({
                     "status": "error",
@@ -132,6 +133,7 @@ class LoginView(CreateAPIView):
             data = {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
+                "role" : user.user_type,
                 "permissions" : permissions
             }
             return Response({
@@ -247,6 +249,7 @@ class OtpVerificationView(CreateAPIView):
             refresh = RefreshToken.for_user(user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
+                    "role" : user.user_type,
                     "approved": False}
             if driver:
                 data["approved"] = True
@@ -286,25 +289,47 @@ class SignupView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ResetPassword(APIView):
+# class ResetPassword(APIView):
+
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         '''
+#             Reset Password
+#         '''
+#         user = request.user
+#         try:
+#             user = User.objects.get(mobile_number = user)
+#         except User.DoesNotExist:
+#             return Response({"status" : "error","message" : "Validation Error", "errors":{"user":"User not Found."}}, status=status.HTTP_400_BAD_REQUEST)
+
+#         serializer = ResetPasswordSerializer(data=request.data, partial=True, context={'user':user})
+#         if serializer.is_valid():
+#             serializer.save()
+#             data = {data['mobile_number']: user.mobile_number}
+#             return Response({"status" : "success", "message": "Password updated successfully", "data" : data}, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResetPasswordView(UpdateAPIView):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class = ResetPasswordSerializer
 
-    def post(self, request):
-        '''
-            Reset Password
-        '''
+    def update(self, request, *args, **kwargs):
         user = request.user
         try:
             user = User.objects.get(mobile_number = user)
         except User.DoesNotExist:
             return Response({"status" : "error","message" : "Validation Error", "errors":{"user":"User not Found."}}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = ResetPasswordSerializer(data=request.data, partial=True, context={'user':user})
+        serializer = self.get_serializer(user, data=request.data, context={'user':user} ,partial=True)
         if serializer.is_valid():
-            serializer.save()
-            data = {data['mobile_number']: user.mobile_number}
+            user = serializer.save()
+            print(user)
+            data = {'data': user}
             return Response({"status" : "success", "message": "Password updated successfully", "data" : data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -347,6 +372,7 @@ class ForgotPasswordView(CreateAPIView):
                 }
             return Response({"status": "success", "message": "Reset password link sent to your email. If Register.","data" : data },status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class change_password(UpdateAPIView):
     '''

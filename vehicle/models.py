@@ -6,15 +6,15 @@ from utils.baseModel import BaseModel
 
 
 def unique_vehicle_images_path(instance, filename):
-    ext = os.path.splitext(filename)[1]  # e.g., .jpg or .png
+    ext = os.path.splitext(filename)[1]
     unique_filename = f"{uuid.uuid4()}{ext}"
-    # Return the full upload path
+    if instance.document_type in ['vehicle_rc_front_image', 'vehicle_rc_back_image']:
+        return os.path.join("vehicle_rc/", unique_filename)
     return os.path.join("vehicle_images/", unique_filename)
 
 def unique_vehicle_rcimage_path(instance, filename):
-    ext = os.path.splitext(filename)[1]  # e.g., .jpg or .png
+    ext = os.path.splitext(filename)[1]
     unique_filename = f"{uuid.uuid4()}{ext}"
-    # Return the full upload path
     return os.path.join("vehicle_rc/", unique_filename)
 
 class WheelerChoices(models.TextChoices):
@@ -44,6 +44,8 @@ class VehicleRequest(BaseModel):
     action_by = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name="vehicle_request_verifier", null=True, blank=True)
     vehicle_number = models.CharField(max_length=8, unique=True)
     vehicle_type = models.CharField(max_length=10, choices=WheelerChoices)
+    vehicle_chassis_number = models.CharField(max_length=17, unique=True,null=True)
+    vehicle_engine_number = models.CharField(max_length=17, unique=True,null=True)
     status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
     rejection_reason = models.TextField(null=True, blank=True)
     action_at = models.DateTimeField(null=True, blank=True)

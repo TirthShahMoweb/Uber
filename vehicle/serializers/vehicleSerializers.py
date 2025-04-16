@@ -1,34 +1,112 @@
-# from django.urls import reverse
+from django.urls import reverse
 
-# from rest_framework import serializers
+from rest_framework import serializers
 
-# from ..models import Vehicle, VehicleRequest
-# from user.models import DriverDetail
-
-
-
-# class VehicleSerializer(serializers.ModelSerializer):
-#     vehicle_front_image = serializers.ImageField(required=True)
-#     vehicle_back_image = serializers.ImageField(required=True)
-#     vehicle_leftSide_image = serializers.ImageField(required=True)
-#     vehicle_rightSide_image = serializers.ImageField(required=True)
-#     vehicle_rc_front_image = serializers.ImageField(required=True)
-#     vehicle_rc_back_image = serializers.ImageField(required=True)
-
-#     class Meta:
-#         model = VehicleRequest
-#         fields = ('vehicle_number', 'vehicle_type', 'vehicle_type',)
-
-#     def create(self, validated_data):
-#         user = self.context['user']
-#         try:
-#             driver = DriverDetail.objects.get(user=user)
-#         except DriverDetail.DoesNotExist:
-#             raise serializers.ValidationError("Driver details not found for this user.")
+from ..models import Vehicle, VehicleRequest, DocumentType
+from user.models import DriverDetail
 
 
-#         vehicle = VehicleRequest.objects.create(driver=driver, **validated_data)
-#         return vehicle
+
+class VehicleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = VehicleRequest
+        fields = ('vehicle_number', 'vehicle_type', 'vehicle_chassis_number', 'vehicle_engine_number',)
+
+
+class VehicleImageSerializer(serializers.Serializer):
+    vehicle_front_image = serializers.ImageField(required=True)
+    vehicle_back_image = serializers.ImageField(required=True)
+    vehicle_leftSide_image = serializers.ImageField(required=True)
+    vehicle_rightSide_image = serializers.ImageField(required=True)
+    vehicle_rc_front_image = serializers.ImageField(required=True)
+    vehicle_rc_back_image = serializers.ImageField(required=True)
+    vehicle_number = VehicleSerializer().fields['vehicle_number']
+    vehicle_type = VehicleSerializer().fields['vehicle_type']
+    vehicle_chassis_number = VehicleSerializer().fields['vehicle_chassis_number']
+    vehicle_engine_number = VehicleSerializer().fields['vehicle_engine_number']
+
+    def validate(self, data):
+        user = self.context.get
+        vehicle_number = data.get('vehicle_number')
+        if not vehicle_number:
+            errors = {'vehicle_number': 'vehicle_number is required.'}
+            raise serializers.ValidationError(errors)
+
+        if len(vehicle_number) != 8:
+            errors = {'vehicle_number': 'Vehicle number must be 8 characters long.'}
+            raise serializers.ValidationError(errors)
+
+        vehicle_type = data.get('vehicle_type')
+        if not vehicle_type:
+            errors = {'vehicle_type': 'vehicle_type is required.'}
+            raise serializers.ValidationError(errors)
+
+        vehicle_chassis_number = data.get('vehicle_chassis_number')
+        if not vehicle_chassis_number:
+            errors = {'vehicle_chassis_number': 'vehicle_chassis_number is required.'}
+            raise serializers.ValidationError(errors)
+
+        if len(vehicle_chassis_number) != 17:
+            errors = {'vehicle_chassis_number': 'Vehicle chassis number must be 17 characters long.'}
+            raise serializers.ValidationError(errors)
+
+        if not vehicle_chassis_number.isalnum():
+            errors = {'vehicle_chassis_number': 'Vehicle chassis number must contain only alphanumeric characters.'}
+            raise serializers.ValidationError(errors)
+
+        vehicle_engine_number = data.get('vehicle_engine_number')
+        if not vehicle_engine_number:
+            errors = {'vehicle_engine_number': 'vehicle_engine_number is required.'}
+            raise serializers.ValidationError(errors)
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context['user']
+
+        try:
+            driver = DriverDetail.objects.get(user=user)
+        except DriverDetail.DoesNotExist:
+            raise serializers.ValidationError("Driver details not found for this user.")
+
+
+        required_documents = [
+            'vehicle_front_image', 'vehicle_back_image',
+            'vehicle_leftSide_image', 'vehicle_rightSide_image',
+            'vehicle_rc_front_image', 'vehicle_rc_back_image',
+        ]
+
+        documents = []
+        for document_type in required_documents:
+            if document_type not in validated_data:
+                errors = {document_type: f"{document_type} is required."}
+                raise serializers.ValidationError(errors)
+
+            if validated_data[document_type].size > 5 * 1024 * 1024:
+                errors = {document_type: f"{document_type} size exceeds 5MB."}
+                raise serializers.ValidationError(errors)
+
+            if validated_data[document_type].content_type not in ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']:
+                errors = {document_type: f"{document_type} must be a JPEG, PNG, JPG or WEBP image."}
+                raise serializers.ValidationError(errors)
+
+            doc = DocumentType.objects.create(
+                document_type = document_type,
+                document_image = validated_data[document_type],
+                document_name = str(validated_data[document_type]),
+                document_size = validated_data[document_type].size,
+                document_mime_type = validated_data[document_type].content_type
+            )
+            documents.append(doc)
+
+        vehicle_request = VehicleRequest.objects.create(driver=driver)
+        vehicle_request.vehicle_number = validated_data['vehicle_number']
+        vehicle_request.vehicle_type = validated_data['vehicle_type']
+        vehicle_request.vehicle_chassis_number = validated_data['vehicle_chassis_number']
+        vehicle_request.vehicle_engine_number = validated_data['vehicle_engine_number']
+        vehicle_request.verification_documents.set(documents)
+        return vehicle_request
 
 
 # class VehicleVerificationPendingSerializer(serializers.ModelSerializer):
@@ -47,6 +125,7 @@
 #         model = Vehicle
 #         fields = ('vehicle_image', 'vehicle_rc', 'vehicle_type',)
 
+
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Vehicle
@@ -54,13 +133,13 @@
 
 
 # class DisplayVehicleSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Vehicle
-#         # fields = '__all__'
-#         fields = ('id','driver','vehicle_image', 'vehicle_rc', 'vehicle_type',)
+    # class Meta:
+    #     model = Vehicle
+    #     # fields = '__all__'
+    #     fields = ('id','driver','vehicle_image', 'vehicle_rc', 'vehicle_type',)
 
-#     # def to_representation(self, instance):
-#     #     representation = super().to_representation(instance)
-#     #     request = self.context['request']
-#     #     representation['vehicle_url'] = reverse('Select_vehicle', args=[instance.id])
-#     #     return representation
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     request = self.context['request']
+    #     representation['vehicle_url'] = reverse('Select_vehicle', args=[instance.id])
+    #     return representation
