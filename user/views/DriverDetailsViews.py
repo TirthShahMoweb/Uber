@@ -6,15 +6,15 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Value
 from django.db.models.functions import Concat
+from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
 from ..models import DriverDetail, DocumentType, User, DriverRequest, RolePermission, Permission
-from ..serializers.DriverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverDetailsApprovalPendingSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
+from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverDetailsApprovalPendingSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
 
 
 class DynamicPermission(BasePermission):
@@ -33,7 +33,6 @@ class DynamicPermission(BasePermission):
             return False
         permissions = RolePermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
         required_permissions = self.required_permissions
-        print("permissions", permissions, "required_permissions", required_permissions)
         if bool(required_permissions in list(permissions)):
             return True
         return False
@@ -75,9 +74,10 @@ class DriverDetailsView(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DriverList(ListAPIView):
+class DriverListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
 
     serializer_class = DriverSerializer
     queryset = DriverRequest.objects.filter(status='approved')
@@ -89,9 +89,9 @@ class DriverList(ListAPIView):
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date')
-        driver = DriverRequest.objects.filter(status='approved')
+        driver = DriverDetail.objects.all()
         if start_date:
-            driver = DriverRequest.objects.filter(created_at__date=start_date)
+            driver = driver.filter(created_at__date=start_date)
         return driver
 
     # def list(self, request, *args, **kwargs):
@@ -108,9 +108,10 @@ class DriverList(ListAPIView):
     #     }, status=200)
 
 
-class AdminDriverStatusList(ListAPIView):
+class AdminDriverStatusListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
 
     serializer_class = DriverVerificationPendingSerializer
     queryset = DriverRequest.objects.all()
@@ -137,8 +138,8 @@ class AdminDriverStatusList(ListAPIView):
 
 
 class UserCountView(ListAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         customer_count = User.objects.filter(user_type='customer').count()
@@ -163,9 +164,10 @@ class UserCountView(ListAPIView):
 
 class DriverDetailsApprovalPendingView(RetrieveAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    lookup_field = 'id'
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
 
+    lookup_field = 'id'
     serializer_class = DriverDetailsApprovalPendingSerializer
 
     def get_object(self):
@@ -177,7 +179,9 @@ class DriverDetailsApprovalPendingView(RetrieveAPIView):
 
 class DriverDraftView(ListAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
+
     serializer_class = DriverDraftSerializer
     drivers = DriverRequest.objects.values_list('user_id', flat=True)
     queryset = User.objects.filter(user_type='driver').exclude(id__in=drivers)
@@ -187,11 +191,11 @@ class DriverDraftView(ListAPIView):
 
 class AdminDriverApprovalView(UpdateAPIView):
     authentication_classes = [JWTAuthentication]
-    lookup_field = 'id'
-    serializer_class = AdminDriverApprovalSerializer
-
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_edit')]
+
+    lookup_field = 'id'
+    serializer_class = AdminDriverApprovalSerializer
 
     def get_object(self):
         try:

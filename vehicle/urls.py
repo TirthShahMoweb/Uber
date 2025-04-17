@@ -1,5 +1,5 @@
 from django.urls import path, include
-from vehicle.views import VehicleViews
+from vehicle.views import vehicleViews
 # from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # Generates access & refresh token
@@ -10,7 +10,7 @@ from rest_framework_simplejwt.views import (
 # urlpatterns = router.urls
 urlpatterns = [
     # Vehicle Details
-    path('addVehicleView', VehicleViews.addVehicleView.as_view()),
+    path('addVehicleView', vehicleViews.addVehicleView.as_view()),
     # path('adminVehicleApprovalPendingList/', VehicleViews.displayVerificationList.as_view()),
     # path('admin-verify-vehicle/<int:pk>/', VehicleViews.vehicleverificationRequest.as_view(),name = 'vehicle-verification-approval'),
     # path('resubmitVehicleView/<int:pk>/', VehicleViews.resubmitVehicleView.as_view(), name = 'vehicle-resubmission'),

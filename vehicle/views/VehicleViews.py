@@ -45,7 +45,7 @@ class addVehicleView(CreateAPIView):
 #     # permission_classes = [IsAuthenticated, CanVerifyDriver]
 
 #     serializer_class = VehicleVerificationPendingSerializer
-#     queryset = Vehicle.objects.filter(status='pending')
+    # queryset = Vehicle.objects.filter()
 
 
 # class vehicleverificationRequest(APIView):

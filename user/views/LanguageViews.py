@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter, OrderingFilter
-from ..serializers.LanguageSerializers import LanguageListSerializer
+from ..serializers.languageSerializers import LanguageListSerializer
 from ..models import Language
 
 

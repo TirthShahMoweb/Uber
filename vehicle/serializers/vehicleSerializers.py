@@ -114,11 +114,6 @@ class VehicleImageSerializer(serializers.Serializer):
 #         model = Vehicle
 #         fields = ('id', 'vehicle_image', 'vehicle_rc', 'vehicle_type',)
 
-#     def to_representation(self, instance):
-#         representation = super().to_representation(instance)
-#         representation['approval_url'] = reverse('vehicle-verification-approval', args=[instance.id])
-#         return representation
-
 
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):
 #     class Meta:

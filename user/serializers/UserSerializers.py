@@ -173,7 +173,7 @@ class AdminSerializer(serializers.ModelSerializer):
         return data
 
 
-class ResetPasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField()
     confirm_password = serializers.CharField()
@@ -205,7 +205,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 class updateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'mobile_number', 'gender', 'user_type',]
+        fields = ('first_name', 'last_name', 'email', 'mobile_number', 'gender',)
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
@@ -231,7 +231,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-class ChangePasswordSerializer(serializers.Serializer):
+class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=128)
     confirm_password = serializers.CharField(max_length=128)
 

@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.authentication import authenticate
-from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, CreateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -8,7 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
 from ..models import User, Role, Permission, RolePermission, DriverDetail
-from ..serializers.UserSerializers import AdminRightsSerializer, ResendOtpSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
+from ..serializers.userSerializers import AdminRightsSerializer, ResendOtpSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
 from Uber import settings
 
 from django.core.mail import send_mail
@@ -36,7 +36,7 @@ class CanEditTeamMember(BasePermission):
         return False
 
 
-class adminRights(RetrieveUpdateAPIView):
+class adminRightsView(RetrieveUpdateAPIView):
     '''
         Give rights to admin.
     '''
@@ -145,7 +145,7 @@ class LoginView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Mobile_Number(CreateAPIView):
+class MobileNumberView(CreateAPIView):
     '''
         Check if the user is logged in or not.
     '''
@@ -289,34 +289,13 @@ class SignupView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class ResetPassword(APIView):
-
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         '''
-#             Reset Password
-#         '''
-#         user = request.user
-#         try:
-#             user = User.objects.get(mobile_number = user)
-#         except User.DoesNotExist:
-#             return Response({"status" : "error","message" : "Validation Error", "errors":{"user":"User not Found."}}, status=status.HTTP_400_BAD_REQUEST)
-
-#         serializer = ResetPasswordSerializer(data=request.data, partial=True, context={'user':user})
-#         if serializer.is_valid():
-#             serializer.save()
-#             data = {data['mobile_number']: user.mobile_number}
-#             return Response({"status" : "success", "message": "Password updated successfully", "data" : data}, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ResetPasswordView(UpdateAPIView):
+class ChangePasswordView(UpdateAPIView):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = ResetPasswordSerializer
+
+    serializer_class = ChangePasswordSerializer
+
 
     def update(self, request, *args, **kwargs):
         user = request.user
@@ -334,7 +313,7 @@ class ResetPasswordView(UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class updateprofile(RetrieveUpdateAPIView):
+class UpdateProfileView(RetrieveUpdateAPIView):
     '''
         Update Profile
     '''
@@ -345,6 +324,20 @@ class updateprofile(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class ProfileView(RetrieveAPIView):
+    '''
+        Get Profile
+    '''
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = updateProfileSerializer
+
+    def get_object(self):
+        return self.request.user
+
 
 
 class ForgotPasswordView(CreateAPIView):
@@ -374,11 +367,11 @@ class ForgotPasswordView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class change_password(UpdateAPIView):
+class ResetPasswordView(UpdateAPIView):
     '''
         Change Password using UpdateAPIView
     '''
-    serializer_class = ChangePasswordSerializer
+    serializer_class = ResetPasswordSerializer
     lookup_field = 'verification_code'
 
 
