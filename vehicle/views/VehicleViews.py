@@ -37,15 +37,16 @@ class addVehicleView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class displayVerificationList(ListAPIView):
+# class VehicleListView(ListAPIView):
 #     '''
 #         Get all vehicle verification requests
 #     '''
 #     # authentication_classes = [JWTAuthentication]
+#     # permission_classes = [IsAuthenticated]
 #     # permission_classes = [IsAuthenticated, CanVerifyDriver]
 
 #     serializer_class = VehicleVerificationPendingSerializer
-    # queryset = Vehicle.objects.filter()
+#     queryset = Vehicle.objects.filter(deleted_at__isnull = False)
 
 
 # class vehicleverificationRequest(APIView):
@@ -142,7 +143,7 @@ class addVehicleView(CreateAPIView):
 #         return Response({"message":"Vehicle Selected Successfully"})
 
 
-# class VehicleDestroyView(DestroyAPIView):
+class VehicleDestroyView(DestroyAPIView):
     """
     Soft delete the Vehicle
     """

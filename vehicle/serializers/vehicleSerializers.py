@@ -28,12 +28,17 @@ class VehicleImageSerializer(serializers.Serializer):
 
     def validate(self, data):
         user = self.context.get
-        vehicle_number = data.get('vehicle_number')
+        try:
+            driver = DriverDetail.objects.get(user=user)
+        except DriverDetail.DoesNotExist:
+            raise serializers.ValidationError("Driver details not found for this user.")
+
+        vehicle_number = data['vehicle_number']
         if not vehicle_number:
             errors = {'vehicle_number': 'vehicle_number is required.'}
             raise serializers.ValidationError(errors)
 
-        if len(vehicle_number) != 8:
+        if len(vehicle_number) != 10:
             errors = {'vehicle_number': 'Vehicle number must be 8 characters long.'}
             raise serializers.ValidationError(errors)
 
@@ -60,37 +65,36 @@ class VehicleImageSerializer(serializers.Serializer):
             errors = {'vehicle_engine_number': 'vehicle_engine_number is required.'}
             raise serializers.ValidationError(errors)
 
-        return data
-
-    def create(self, validated_data):
-        user = self.context['user']
-
-        try:
-            driver = DriverDetail.objects.get(user=user)
-        except DriverDetail.DoesNotExist:
-            raise serializers.ValidationError("Driver details not found for this user.")
-
-
         required_documents = [
             'vehicle_front_image', 'vehicle_back_image',
             'vehicle_leftSide_image', 'vehicle_rightSide_image',
             'vehicle_rc_front_image', 'vehicle_rc_back_image',
         ]
 
-        documents = []
         for document_type in required_documents:
-            if document_type not in validated_data:
+            if document_type not in data:
                 errors = {document_type: f"{document_type} is required."}
                 raise serializers.ValidationError(errors)
 
-            if validated_data[document_type].size > 5 * 1024 * 1024:
+            if data[document_type].size > 5 * 1024 * 1024:
                 errors = {document_type: f"{document_type} size exceeds 5MB."}
                 raise serializers.ValidationError(errors)
 
-            if validated_data[document_type].content_type not in ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']:
+            if data[document_type].content_type not in ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']:
                 errors = {document_type: f"{document_type} must be a JPEG, PNG, JPG or WEBP image."}
                 raise serializers.ValidationError(errors)
 
+        return data
+
+    def create(self, validated_data):
+        user = self.context['user']
+        driver = DriverDetail.objects.get(user=user)
+        required_documents = [
+            'vehicle_front_image', 'vehicle_back_image',
+            'vehicle_leftSide_image', 'vehicle_rightSide_image',
+            'vehicle_rc_front_image', 'vehicle_rc_back_image',]
+        documents = []
+        for document_type in required_documents:
             doc = DocumentType.objects.create(
                 document_type = document_type,
                 document_image = validated_data[document_type],
@@ -112,7 +116,7 @@ class VehicleImageSerializer(serializers.Serializer):
 # class VehicleVerificationPendingSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Vehicle
-#         fields = ('id', 'vehicle_image', 'vehicle_rc', 'vehicle_type',)
+#         fields = ('id', 'vehicle_number', 'vehicle_engine_number', 'vehicle_chassis_number', 'vehicle_type', 'created_at', 'action_at')
 
 
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):

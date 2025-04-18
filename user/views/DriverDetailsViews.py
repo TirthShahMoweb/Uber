@@ -75,12 +75,12 @@ class DriverDetailsView(ListCreateAPIView):
 
 
 class DriverListView(ListAPIView):
-    authentication_classes = [JWTAuthentication]
-    def get_permissions(self):
-        return [IsAuthenticated(), DynamicPermission('user_view')]
+    # authentication_classes = [JWTAuthentication]
+    # def get_permissions(self):
+    #     return [IsAuthenticated(), DynamicPermission('user_view')]
 
     serializer_class = DriverSerializer
-    queryset = DriverRequest.objects.filter(status='approved')
+    queryset = DriverRequest.objects.filter(status = 'approved')
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['user__first_name', 'user__last_name']
 

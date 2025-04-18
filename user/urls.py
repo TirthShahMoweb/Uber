@@ -39,7 +39,7 @@ urlpatterns = [
     # path('driver-details/resubmit', driverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
     path('driverDetailsApprovalPendingView/<int:id>', driverDetailsViews.DriverDetailsApprovalPendingView.as_view()),
     path('driverDraftView', driverDetailsViews.DriverDraftView.as_view()),
-    path('driverList', driverDetailsViews.DriverListView.as_view()),
+    path('driverListView', driverDetailsViews.DriverListView.as_view()),
     path('languagesListView', languageViews.LanguageListView.as_view()),
     path('userCountView', driverDetailsViews.UserCountView.as_view()),
 

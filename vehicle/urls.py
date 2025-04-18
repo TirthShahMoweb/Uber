@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     # Vehicle Details
     path('addVehicleView', vehicleViews.addVehicleView.as_view()),
+    # path('vehicleListView', vehicleViews.VehicleListView.as_view()),
     # path('adminVehicleApprovalPendingList/', VehicleViews.displayVerificationList.as_view()),
     # path('admin-verify-vehicle/<int:pk>/', VehicleViews.vehicleverificationRequest.as_view(),name = 'vehicle-verification-approval'),
     # path('resubmitVehicleView/<int:pk>/', VehicleViews.resubmitVehicleView.as_view(), name = 'vehicle-resubmission'),

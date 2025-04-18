@@ -31,7 +31,7 @@ class VerificationStatus(models.TextChoices):
 
 class Vehicle(BaseModel):
     driver = models.ForeignKey('user.DriverDetail', on_delete=models.CASCADE)
-    vehicle_number = models.CharField(max_length=8, unique=True)
+    vehicle_number = models.CharField(max_length=10, unique=True)
     vehicle_chassis_number = models.CharField(max_length=17, unique=True,null=True)
     vehicle_engine_number = models.CharField(max_length=17, unique=True,null=True)
     vehicle_type = models.CharField(max_length=10, choices=WheelerChoices)
