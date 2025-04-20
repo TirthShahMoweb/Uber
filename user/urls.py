@@ -32,12 +32,13 @@ urlpatterns = [
     path('forgotpassword', userViews.ForgotPasswordView.as_view()),
     path('forgot-password/<str:verification_code>', userViews.ResetPasswordView.as_view()),
     path('ProfileView', userViews.ProfileView.as_view()),
+
     # Driver Details
     path('adminDriverStatusList', driverDetailsViews.AdminDriverStatusListView.as_view()),
     path('add-driver-details', driverDetailsViews.DriverDetailsView.as_view()),
     path('admin-verify-driver/<int:id>', driverDetailsViews.AdminDriverApprovalView.as_view(), name = 'driver-verification-approval'),
     # path('driver-details/resubmit', driverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
-    path('driverDetailsApprovalPendingView/<int:id>', driverDetailsViews.DriverDetailsApprovalPendingView.as_view()),
+    path('driverPersonalDetailView/<int:id>', driverDetailsViews.DriverPersonalDetailsView.as_view()),
     path('driverDraftView', driverDetailsViews.DriverDraftView.as_view()),
     path('driverListView', driverDetailsViews.DriverListView.as_view()),
     path('languagesListView', languageViews.LanguageListView.as_view()),

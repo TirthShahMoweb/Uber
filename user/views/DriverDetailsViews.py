@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
 from ..models import DriverDetail, DocumentType, User, DriverRequest, RolePermission, Permission
-from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverDetailsApprovalPendingSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
+from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
 
 
 class DynamicPermission(BasePermission):
@@ -75,12 +75,11 @@ class DriverDetailsView(ListCreateAPIView):
 
 
 class DriverListView(ListAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # def get_permissions(self):
-    #     return [IsAuthenticated(), DynamicPermission('user_view')]
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
 
     serializer_class = DriverSerializer
-    queryset = DriverRequest.objects.filter(status = 'approved')
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['user__first_name', 'user__last_name']
 
@@ -89,7 +88,7 @@ class DriverListView(ListAPIView):
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date')
-        driver = DriverDetail.objects.all()
+        driver = DriverRequest.objects.filter(status = 'approved')
         if start_date:
             driver = driver.filter(created_at__date=start_date)
         return driver
@@ -162,13 +161,13 @@ class UserCountView(ListAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class DriverDetailsApprovalPendingView(RetrieveAPIView):
-    authentication_classes = [JWTAuthentication]
-    def get_permissions(self):
-        return [IsAuthenticated(), DynamicPermission('user_view')]
+class DriverPersonalDetailsView(RetrieveAPIView):
+    # authentication_classes = [JWTAuthentication]
+    # def get_permissions(self):
+    #     return [IsAuthenticated(), DynamicPermission('user_view')]
 
     lookup_field = 'id'
-    serializer_class = DriverDetailsApprovalPendingSerializer
+    serializer_class = DriverPersonalDetailsViewSerializer
 
     def get_object(self):
         try:

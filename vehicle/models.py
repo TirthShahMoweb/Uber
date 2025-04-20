@@ -42,7 +42,7 @@ class Vehicle(BaseModel):
 class VehicleRequest(BaseModel):
     driver = models.ForeignKey('user.DriverDetail', on_delete=models.CASCADE)
     action_by = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name="vehicle_request_verifier", null=True, blank=True)
-    vehicle_number = models.CharField(max_length=8, unique=True)
+    vehicle_number = models.CharField(max_length=10, unique=True)
     vehicle_type = models.CharField(max_length=10, choices=WheelerChoices)
     vehicle_chassis_number = models.CharField(max_length=17, unique=True,null=True)
     vehicle_engine_number = models.CharField(max_length=17, unique=True,null=True)
@@ -53,7 +53,7 @@ class VehicleRequest(BaseModel):
 
 
 class DocumentType(BaseModel):
-    document_type = models.CharField(max_length=100, unique=True) # vehicle_front_image, vehicle_back_image, vehicle_leftSide_image, vehicle_rightSide_image, vehicle_rc_front_image, vehicle_rc_back_image
+    document_type = models.CharField(max_length=100) # vehicle_front_image, vehicle_back_image, vehicle_leftSide_image, vehicle_rightSide_image, vehicle_rc_front_image, vehicle_rc_back_image
     document_image = models.ImageField(upload_to=unique_vehicle_images_path, null=True, blank=True)
     document_name = models.CharField(max_length=100, null=True, blank=True)
     document_size = models.IntegerField(null=True, blank=True)

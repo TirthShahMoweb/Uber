@@ -27,11 +27,16 @@ class VehicleImageSerializer(serializers.Serializer):
     vehicle_engine_number = VehicleSerializer().fields['vehicle_engine_number']
 
     def validate(self, data):
-        user = self.context.get
+        user = self.context.get('user')
         try:
             driver = DriverDetail.objects.get(user=user)
         except DriverDetail.DoesNotExist:
             raise serializers.ValidationError("Driver details not found for this user.")
+
+        vehicle_number = VehicleRequest.objects.all().values_list('vehicle_number', flat=True)
+        if data['vehicle_number'] in vehicle_number:
+            errors = {'vehicle_number': 'Vehicle number already exists.'}
+            raise serializers.ValidationError(errors)
 
         vehicle_number = data['vehicle_number']
         if not vehicle_number:
@@ -39,7 +44,7 @@ class VehicleImageSerializer(serializers.Serializer):
             raise serializers.ValidationError(errors)
 
         if len(vehicle_number) != 10:
-            errors = {'vehicle_number': 'Vehicle number must be 8 characters long.'}
+            errors = {'vehicle_number': 'Vehicle number must be 10 characters long.'}
             raise serializers.ValidationError(errors)
 
         vehicle_type = data.get('vehicle_type')
@@ -110,13 +115,32 @@ class VehicleImageSerializer(serializers.Serializer):
         vehicle_request.vehicle_chassis_number = validated_data['vehicle_chassis_number']
         vehicle_request.vehicle_engine_number = validated_data['vehicle_engine_number']
         vehicle_request.verification_documents.set(documents)
+        vehicle_request.save()
         return vehicle_request
 
 
-# class VehicleVerificationPendingSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Vehicle
-#         fields = ('id', 'vehicle_number', 'vehicle_engine_number', 'vehicle_chassis_number', 'vehicle_type', 'created_at', 'action_at')
+class AdminVehicleStatusListSerailzier(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='driver.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='driver.user.last_name', read_only=True)
+    mobile_number = serializers.CharField(source='driver.user.mobile_number', read_only=True)
+
+    class Meta:
+        model = VehicleRequest
+        fields = ('id', 'first_name' ,'last_name', 'mobile_number', 'vehicle_number', 'vehicle_type', 'status', 'created_at')
+
+
+class VehicleDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentType
+        fields = ['id', 'document_type', 'document_image']
+
+
+class VehicleDetailsSerializer(serializers.ModelSerializer):
+    documents = VehicleDocumentSerializer(many=True, source='verification_documents')
+    class Meta:
+        model = VehicleRequest
+        fields = ('vehicle_number', 'vehicle_type', 'vehicle_chassis_number', 'vehicle_engine_number', 'documents',
+                  'status', 'action_at', 'rejection_reason', 'action_by')
 
 
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):

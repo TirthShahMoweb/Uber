@@ -1,17 +1,20 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, DestroyAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, DestroyAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
+
 # from user.views.DriverDetailsViews import CanVerifyDriver
-from ..models import Vehicle
+from ..models import Vehicle, VehicleRequest
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleImageSerializer
+from ..serializers.vehicleSerializers import VehicleImageSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer
 # , DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
@@ -31,23 +34,55 @@ class addVehicleView(CreateAPIView):
         user = request.user
         serializer = self.get_serializer(data=data, context={'user': user})
         if serializer.is_valid():
-            serializer.save()
-            data = {}
+            data = serializer.save()
+            data = {"vehicle_number": data.vehicle_number,
+                    "vehicle_type": data.vehicle_type,
+                    "vehicle_chassis_number": data.vehicle_chassis_number,
+                    "vehicle_engine_number": data.vehicle_engine_number}
             return Response({'status':'success','message': 'Details submitted for verification','data' : data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class VehicleListView(ListAPIView):
-#     '''
-#         Get all vehicle verification requests
-#     '''
-#     # authentication_classes = [JWTAuthentication]
-#     # permission_classes = [IsAuthenticated]
-#     # permission_classes = [IsAuthenticated, CanVerifyDriver]
+class AdminVehicleStatusListView(ListAPIView):
+    '''
+        Get all vehicle verification requests
+    '''
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated, CanVerifyDriver]
+    filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
 
-#     serializer_class = VehicleVerificationPendingSerializer
-#     queryset = Vehicle.objects.filter(deleted_at__isnull = False)
+    search_fields = ['driver__user__first_name', 'driver__user__last_name', 'vehicle_number', 'driver__user__mobile_number']
+    filterset_fields = ['status']
 
+    ordering_fields = ['driver__user__first_name', 'created_at']
+    ordering = ['-created_at']
+    serializer_class = AdminVehicleStatusListSerailzier
+
+    def get_queryset(self):
+        start_date = self.request.query_params.get('start_date')
+        status = self.request.query_params.get('status')
+        driver = VehicleRequest.objects.all()
+        if status:
+            driver = driver.filter(status=status)
+
+        if start_date:
+            driver = driver.filter(created_at__date=start_date)
+
+        return driver
+
+
+
+class DriverVehicleDetailsView(RetrieveAPIView):
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
+    serializer_class = VehicleDetailsSerializer
+
+    def get_object(self):
+        try:
+            return VehicleRequest.objects.get(id=self.kwargs['pk'],)
+        except VehicleRequest.DoesNotExist:
+            return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
 
 # class vehicleverificationRequest(APIView):
 #     '''
@@ -143,35 +178,35 @@ class addVehicleView(CreateAPIView):
 #         return Response({"message":"Vehicle Selected Successfully"})
 
 
-class VehicleDestroyView(DestroyAPIView):
-    """
-    Soft delete the Vehicle
-    """
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+# class VehicleDestroyView(DestroyAPIView):
+#     """
+#     Soft delete the Vehicle
+#     """
+#     authentication_classes = [JWTAuthentication]
+#     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        user = self.request.user
-        try:
-            driver = DriverDetail.objects.get(user=user)
-            return Vehicle.objects.filter(driver=driver, deleted_at=None)
-        except DriverDetail.DoesNotExist:
-            return Vehicle.objects.none()
+#     def get_queryset(self):
+#         user = self.request.user
+#         try:
+#             driver = DriverDetail.objects.get(user=user)
+#             return Vehicle.objects.filter(driver=driver, deleted_at=None)
+#         except DriverDetail.DoesNotExist:
+#             return Vehicle.objects.none()
 
-    def destroy(self, request, pk):
-        user = request.user
+#     def destroy(self, request, pk):
+#         user = request.user
 
-        try:
-            driver = DriverDetail.objects.get(user=user)
-        except DriverDetail.DoesNotExist:
-            return Response({'error': 'Driver details not found'}, status=status.HTTP_404_NOT_FOUND)
+#         try:
+#             driver = DriverDetail.objects.get(user=user)
+#         except DriverDetail.DoesNotExist:
+#             return Response({'error': 'Driver details not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        vehicle = get_object_or_404(Vehicle, pk=pk, driver=driver)
+#         vehicle = get_object_or_404(Vehicle, pk=pk, driver=driver)
 
-        if driver.in_use == vehicle:
-            # driver.in_use = Vehicle.objects.filter(driver = driver).first()
-            driver.in_use = None
-        vehicle.deleted_at = timezone.now()
-        vehicle.save()
+#         if driver.in_use == vehicle:
+#             # driver.in_use = Vehicle.objects.filter(driver = driver).first()
+#             driver.in_use = None
+#         vehicle.deleted_at = timezone.now()
+#         vehicle.save()
 
-        return Response({"Message": "Vehicle soft deleted successfully."}, status=status.HTTP_200_OK)
+#         return Response({"Message": "Vehicle soft deleted successfully."}, status=status.HTTP_200_OK)

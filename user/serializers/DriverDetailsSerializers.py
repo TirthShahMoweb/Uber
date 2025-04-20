@@ -31,6 +31,9 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
             errors = {"user" : "You have already applied as a driver. You cannot apply again."}
             raise CustomValidationError(errors)
 
+        if DriverRequest.objects.filter(user=self.context['user'], status='approved').exists():
+            errors = {"user" : "You are already a driver."}
+            raise CustomValidationError(errors)
         return data
 
     def create(self, validated_data):
@@ -115,10 +118,11 @@ class DriverSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source = 'user.first_name')
     last_name = serializers.CharField(source = 'user.last_name')
     mobile_number = serializers.CharField(source = 'user.mobile_number')
+    verifier = serializers.CharField(source = 'action_by.first_name', allow_null=True)
 
     class Meta:
         model = DriverRequest
-        fields = ('id', 'first_name', 'last_name', 'mobile_number' , 'created_at', 'action_at',)
+        fields = ('id', 'first_name', 'last_name', 'created_at', 'action_at', 'mobile_number' ,'verifier')
 
 
 class DocumentRequiredSerializer(serializers.ModelSerializer):
@@ -157,7 +161,7 @@ class DriverVerificationPendingSerializer(serializers.ModelSerializer):
     #     return representation
 
 
-class DriverDetailsApprovalPendingSerializer(serializers.ModelSerializer):
+class DriverPersonalDetailsViewSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(source = 'user.profile_pic')
     mobile_number = serializers.CharField(source = 'user.mobile_number')
     first_name = serializers.CharField(source = 'user.first_name')

@@ -78,15 +78,9 @@ class DriverDetail(BaseModel):
     amount_remaining = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     verified_at = models.DateTimeField(null = True)
-    # status = models.CharField(max_length=10, choices=VerificationStatus, default='pending')
-    # rejection_reason = models.TextField(null=True, blank=True)
     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_detail_documents')
 
-# status
-# message
-# data
 
-# action_by
 class DriverRequest(BaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_request_user")
