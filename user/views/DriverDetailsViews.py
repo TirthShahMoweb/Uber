@@ -25,7 +25,6 @@ class DynamicPermission(BasePermission):
         self.required_permissions = required_permissions
 
     def has_permission(self, request, view):
-        print("request.user", request.user)
         role = request.user.role
         if role is None:
             return False
@@ -162,9 +161,9 @@ class UserCountView(ListAPIView):
 
 
 class DriverPersonalDetailsView(RetrieveAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # def get_permissions(self):
-    #     return [IsAuthenticated(), DynamicPermission('user_view')]
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('user_view')]
 
     lookup_field = 'id'
     serializer_class = DriverPersonalDetailsViewSerializer
@@ -226,6 +225,7 @@ class AdminDriverApprovalView(UpdateAPIView):
             driver_request.status = 'rejected'
             driver_request.rejection_reason = rejection_reason
             driver_request.action_by = admin_user
+            driver_request.action_at = timezone.now()
             driver_request.save()
             data = {'Rejection reason': rejection_reason}
             return Response({"status" : "success" , 'message': 'Details rejected' , "data" : data}, status=status.HTTP_200_OK)

@@ -120,13 +120,19 @@ class VehicleImageSerializer(serializers.Serializer):
 
 
 class AdminVehicleStatusListSerailzier(serializers.ModelSerializer):
-    first_name = serializers.CharField(source='driver.user.first_name', read_only=True)
-    last_name = serializers.CharField(source='driver.user.last_name', read_only=True)
-    mobile_number = serializers.CharField(source='driver.user.mobile_number', read_only=True)
+    name = serializers.CharField(read_only=True)
 
     class Meta:
         model = VehicleRequest
-        fields = ('id', 'first_name' ,'last_name', 'mobile_number', 'vehicle_number', 'vehicle_type', 'status', 'created_at')
+        fields = ('id', 'name', 'vehicle_number', 'vehicle_type', 'status', 'created_at')
+
+
+class VehicleListViewSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = VehicleRequest
+        fields = ('id', 'name', 'vehicle_number', 'vehicle_type', 'status', 'created_at')
 
 
 class VehicleDocumentSerializer(serializers.ModelSerializer):
@@ -137,10 +143,26 @@ class VehicleDocumentSerializer(serializers.ModelSerializer):
 
 class VehicleDetailsSerializer(serializers.ModelSerializer):
     documents = VehicleDocumentSerializer(many=True, source='verification_documents')
+    action_by = serializers.CharField(source='action_by.get_full_name', allow_null=True)
+
     class Meta:
         model = VehicleRequest
         fields = ('vehicle_number', 'vehicle_type', 'vehicle_chassis_number', 'vehicle_engine_number', 'documents',
                   'status', 'action_at', 'rejection_reason', 'action_by')
+
+
+class AdminVehicleApprovalSerializer(serializers.Serializer):
+    is_approved = serializers.CharField(required = False)
+    rejection_reason = serializers.CharField(required = False)
+
+
+class DraftVehicleListViewSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    mobile_number = serializers.CharField(source='user.mobile_number', read_only=True)
+
+    class Meta:
+        model = DriverDetail
+        fields = ('id', 'name', 'mobile_number', 'created_at', 'verified_at',)
 
 
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):

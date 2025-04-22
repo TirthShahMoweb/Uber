@@ -1,0 +1,192 @@
+[
+    {
+        "model": "user.permission",
+        "pk": 1,
+        "fields": {
+            "permission_name": "user_view",
+            "description": "View details of existing users",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 2,
+        "fields": {
+            "permission_name": "user_edit",
+            "description": "Edit details of an existing user",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 3,
+        "fields": {
+            "permission_name": "user_delete",
+            "description": "Delete an existing user from the system",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 4,
+        "fields": {
+            "permission_name": "add_team_member",
+            "description": "Add a new member to the team",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 5,
+        "fields": {
+            "permission_name": "remove_team_member",
+            "description": "Remove an existing team member",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 6,
+        "fields": {
+            "permission_name": "view_team_members",
+            "description": "View the list of team members",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 7,
+        "fields": {
+            "permission_name": "edit_team_member",
+            "description": "Edit details of a team member",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 8,
+        "fields": {
+            "permission_name": "vehicle_view",
+            "description": "View details of vehicles",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 9,
+        "fields": {
+            "permission_name": "vehicle_edit",
+            "description": "Edit details of a vehicle",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 10,
+        "fields": {
+            "permission_name": "vehicle_delete",
+            "description": "Delete a vehicle from the system",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 11,
+        "fields": {
+            "permission_name": "role_view",
+            "description": "View details of existing roles",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 12,
+        "fields": {
+            "permission_name": "role_create_edit",
+            "description": "Create or modify roles",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 13,
+        "fields": {
+            "permission_name": "role_delete",
+            "description": "Delete a role from the system",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 14,
+        "fields": {
+            "permission_name": "permission_view",
+            "description": "View the list of permissions",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 15,
+        "fields": {
+            "permission_name": "permission_create_edit",
+            "description": "Create or modify permissions",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 16,
+        "fields": {
+            "permission_name": "permission_delete",
+            "description": "Delete permissions from the system",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 17,
+        "fields": {
+            "permission_name": "language_create_edit",
+            "description": "Create or modify language settings",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 18,
+        "fields": {
+            "permission_name": "language_delete",
+            "description": "Delete a language option from the system",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    },
+    {
+        "model": "user.permission",
+        "pk": 19,
+        "fields": {
+            "permission_name": "language_view",
+            "description": "View available language options",
+            "created_at": "2025-04-21T11:42:00",
+            "updated_at": "2025-04-21T11:42:00"
+        }
+    }
+]

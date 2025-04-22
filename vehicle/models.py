@@ -18,9 +18,9 @@ def unique_vehicle_rcimage_path(instance, filename):
     return os.path.join("vehicle_rc/", unique_filename)
 
 class WheelerChoices(models.TextChoices):
-    TWO_WHEELER = '2', '2 Wheeler'
-    THREE_WHEELER = '3', '3 Wheeler'
-    FOUR_WHEELER = '4', '4 Wheeler'
+    TWO_WHEELER = '2 Wheeler', '2 Wheeler'
+    THREE_WHEELER = '3 Wheeler', '3 Wheeler'
+    FOUR_WHEELER = '4 Wheeler', '4 Wheeler'
 
 
 class VerificationStatus(models.TextChoices):

@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.generics import ListAPIView, DestroyAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, UpdateAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,11 +10,13 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import F, Value, CharField
+from django.db.models.functions import Concat
 
 # from user.views.DriverDetailsViews import CanVerifyDriver
 from ..models import Vehicle, VehicleRequest
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleImageSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer
+from ..serializers.vehicleSerializers import VehicleImageSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer
 # , DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
@@ -52,17 +54,17 @@ class AdminVehicleStatusListView(ListAPIView):
     # permission_classes = [IsAuthenticated, CanVerifyDriver]
     filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
 
-    search_fields = ['driver__user__first_name', 'driver__user__last_name', 'vehicle_number', 'driver__user__mobile_number']
+    search_fields = ['name', 'vehicle_number', 'driver__user__mobile_number']
     filterset_fields = ['status']
 
-    ordering_fields = ['driver__user__first_name', 'created_at']
+    ordering_fields = ['name', 'created_at']
     ordering = ['-created_at']
     serializer_class = AdminVehicleStatusListSerailzier
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date')
         status = self.request.query_params.get('status')
-        driver = VehicleRequest.objects.all()
+        driver = VehicleRequest.objects.annotate(name=Concat(F('driver__user__first_name'), Value(' '), F('driver__user__last_name'), output_field=CharField()))
         if status:
             driver = driver.filter(status=status)
 
@@ -72,17 +74,89 @@ class AdminVehicleStatusListView(ListAPIView):
         return driver
 
 
-
 class DriverVehicleDetailsView(RetrieveAPIView):
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = VehicleDetailsSerializer
 
     def get_object(self):
         try:
-            return VehicleRequest.objects.get(id=self.kwargs['pk'],)
+            return VehicleRequest.objects.get(id=self.kwargs['pk'])
         except VehicleRequest.DoesNotExist:
             return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminVehicleApprovalView(UpdateAPIView):
+    '''
+        Approve or reject vehicle verification requests
+    '''
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = AdminVehicleApprovalSerializer
+
+    def get_object(self):
+        try:
+            return VehicleRequest.objects.get(id=self.kwargs['pk'])
+        except VehicleRequest.DoesNotExist:
+            return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Does not applied as Driver."}}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        is_approved = request.data.get("is_approved")
+        rejection_reason = request.data.get("rejection_reason")
+        if is_approved:
+            instance.status = 'approved'
+            instance.action_by = request.user
+            instance.action_at = timezone.now()
+            instance.save()
+
+            vehicle = Vehicle.objects.create(driver=instance.driver, vehicle_number=instance.vehicle_number, vehicle_type=instance.vehicle_type, vehicle_chassis_number=instance.vehicle_chassis_number, vehicle_engine_number=instance.vehicle_engine_number)
+            vehicle.verification_documents.set(instance.verification_documents.all())
+            vehicle.verified_at = timezone.now()
+            vehicle.save()
+
+            instance.driver.in_use = vehicle
+            instance.driver.save()
+            data = {}
+            return Response({"status":"success", 'message': 'Vehicle approved'}, status=status.HTTP_200_OK)
+        if rejection_reason:
+            instance.status = "rejected"
+            instance.rejection_reason = rejection_reason
+            instance.action_by = request.user
+            instance.action_at = timezone.now()
+            instance.save()
+            return Response({'message': 'Details rejected', 'rejection_reason': rejection_reason }, status=status.HTTP_200_OK)
+        return Response({'error': 'Please provide a rejection reason'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VehicleListView(ListAPIView):
+
+    queryset = VehicleRequest.objects.filter(status = 'approved', deleted_at=None).annotate(name=Concat(F('driver__user__first_name'), Value(' '), F('driver__user__last_name'), output_field=CharField()))
+    serializer_class = VehicleListViewSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
+    search_fields = ['vehicle_number', 'name', 'driver__user__mobile_number']
+    filterset_fields = ['status']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['-created_at']
+
+
+class DraftVehicleListView(ListAPIView):
+
+    serializer_class = DraftVehicleListViewSerializer
+    vehicleRequest = VehicleRequest.objects.values_list("driver_id", flat=True).distinct()
+    queryset = DriverDetail.objects.filter(in_use=None).exclude(id__in=vehicleRequest).annotate(name=Concat(F('user__first_name'), Value(' '), F('user__last_name'), output_field=CharField()))
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
+    search_fields = ['vehicle_number', 'name', 'driver__user__mobile_number']
+    filterset_fields = ['status']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['-created_at']
+
 
 # class vehicleverificationRequest(APIView):
 #     '''
