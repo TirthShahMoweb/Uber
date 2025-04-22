@@ -1,0 +1,62 @@
+[
+{
+    "model": "user.user",
+    "pk": 2,
+    "fields": {
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-04-21T06:24:22Z",
+        "created_at": "2025-04-21T06:25:32.987Z",
+        "updated_at": "2025-04-21T07:08:45.142Z",
+        "deleted_at": null,
+        "email": "tirthmshah1221@gmail.com",
+        "first_name": "Tirth",
+        "last_name": "Shah",
+        "password": "pbkdf2_sha256$870000$1oT44WCAMxW0FZKrOElpxk$6ARk4/j+NsETCBlZwpZuwyzTM8OqKEE6gwLPuUh7X+s=",
+        "mobile_number": "+919328885618",
+        "profile_pic": "",
+        "thumbnail_pic": "",
+        "otp": null,
+        "otp_created_at": null,
+        "verification_code": "ba739565b248b7014ec309d8320688b31ec6c28f381f5ffd5ef6ff14d1346e65",
+        "verification_code_created_at": "2025-04-21T06:26:51Z",
+        "gender": "male",
+        "user_type": "admin",
+        "role": 1,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "user.user",
+    "pk": 20,
+    "fields": {
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-04-22T08:15:10Z",
+        "created_at": "2025-04-22T08:16:23.555Z",
+        "updated_at": "2025-04-22T08:16:23.584Z",
+        "deleted_at": null,
+        "email": "admin@gmail.com",
+        "first_name": "Virat",
+        "last_name": "Kohli",
+        "password": "123456",
+        "mobile_number": "+918318181818",
+        "profile_pic": "",
+        "thumbnail_pic": "",
+        "otp": null,
+        "otp_created_at": null,
+        "verification_code": null,
+        "verification_code_created_at": null,
+        "gender": null,
+        "user_type": "admin",
+        "role": 2,
+        "groups": [],
+        "user_permissions": []
+    }
+}
+]
