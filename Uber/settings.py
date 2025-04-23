@@ -14,6 +14,14 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from decouple import config
+import logging
+
+logging.basicConfig(
+    level=logging.ERROR,  # Choose the log level
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+logger = logging.getLogger(__name__)  # Create a logger object
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

@@ -17,6 +17,7 @@ urlpatterns = [
     path('adminVehicleApprovalView/<int:pk>', vehicleViews.AdminVehicleApprovalView.as_view()),
     path('draftVehicleListView', vehicleViews.DraftVehicleListView.as_view()),
     path('driverVehiclesListView', vehicleViews.DriverVehiclesListView.as_view()),
+    path('selectVehicleView', vehicleViews.SelectVehicleView.as_view()),
     # path('vehicleListView', vehicleViews.VehicleListView.as_view()),
     # path('adminVehicleApprovalPendingList/', VehicleViews.displayVerificationList.as_view()),
     # path('admin-verify-vehicle/<int:pk>/', VehicleViews.vehicleverificationRequest.as_view(),name = 'vehicle-verification-approval'),

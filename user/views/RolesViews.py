@@ -1,7 +1,7 @@
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 
 from ..models import Role
-from ..serializers.rolesSerializers import roleSerializer
+from ..serializers.rolesSerializers import roleSerializer, roleListSerializer
 
 class CreateRoles(CreateAPIView):
     '''
@@ -10,9 +10,18 @@ class CreateRoles(CreateAPIView):
     serializer_class = roleSerializer
     queryset = Role.objects.all()
 
+
 class RetrieveUpdateDestroyRoles(RetrieveUpdateDestroyAPIView):
     '''
         create Role
     '''
     serializer_class = roleSerializer
     queryset = Role.objects.all()
+
+
+class RoleListView(ListAPIView):
+    '''
+        List all roles
+    '''
+    serializer_class =  roleListSerializer
+    queryset = Role.objects.exclude(role_name="CEO")

@@ -11,20 +11,23 @@ urlpatterns = [
     # User Signup and Login
     path('login', userViews.LoginView.as_view()),
     path('signup', userViews.SignupView.as_view()),
-    path('addTeamMemberView', userViews.AddTeamMemberView.as_view()),
     path('mobile_number', userViews.MobileNumberView.as_view()),
     path('otp-verification', userViews.OtpVerificationView.as_view()),
     path('resendOtpView', userViews.ResendOtpView.as_view()),
-
+    path('addTeamMemberView', userViews.AddTeamMemberView.as_view()),
+    path('listTeamMemberView', userViews.ListTeamMemberView.as_view()),
+    path('destroyTeamMemberView/<int:pk>', userViews.DestroyTeamMemberView.as_view()),
+    path('updateTeamMemberView/<int:pk>', userViews.UpdateTeamMemberView.as_view()),
     # Roles
     path('createRoles', rolesViews.CreateRoles.as_view()),
-    path('RetrieveUpdateDestroyRoles/<int:pk>', rolesViews.RetrieveUpdateDestroyRoles.as_view()),
+    path('retrieveUpdateDestroyRoles/<int:pk>', rolesViews.RetrieveUpdateDestroyRoles.as_view()),
     # path('AssignAdminRoleView/', userViews.AssignAdminRoleView.as_view()),
     path('adminRights/<str:verification_code>',userViews.adminRightsView.as_view()),
+    path('roleListView', rolesViews.RoleListView.as_view()),
 
     # Permission
     path('createPermission', permissionViews.CreatePermission.as_view()),
-    path('RetrieveUpdateDestroyPermission/<int:pk>', permissionViews.RetrieveUpdateDestroyPermission.as_view()),
+    path('retrieveUpdateDestroyPermission/<int:pk>', permissionViews.RetrieveUpdateDestroyPermission.as_view()),
 
     # User Details
     path('updateProfileView', userViews.UpdateProfileView.as_view()),

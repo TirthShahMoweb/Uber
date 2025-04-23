@@ -7,7 +7,7 @@ class roleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ['role_name', 'description']
+        fields = ('role_name', 'description')
 
     def validate_role_name(self, data):
 
@@ -18,3 +18,9 @@ class roleSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         role = Role.objects.create(**validated_data)
         return role
+
+class roleListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Role
+        fields = ('id', 'role_name')

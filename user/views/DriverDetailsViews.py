@@ -241,11 +241,11 @@ class ImpersonationView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)  # Pass user in context
 
         if serializer.is_valid():
-            user = User.objects.filter(mobile_number = request.data['mobile_number']).first()
-            refresh = RefreshToken.for_user(user)
+            driver = DriverRequest.objects.filter(id = request.data['id']).first()
+            refresh = RefreshToken.for_user(driver.user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
-                    "role" : user.user_type}
+                    "role" : driver.user.user_type}
 
             return Response( {
                 "status": "success",

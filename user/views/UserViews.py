@@ -1,14 +1,19 @@
 from rest_framework import status
 from rest_framework.authentication import authenticate
-from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, DestroyAPIView,CreateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.exceptions import NotFound
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db.models import F, Value, CharField
+from django.db.models.functions import Concat
 
+from utils.mixins import DynamicPermission
 from ..models import User, Role, Permission, RolePermission, DriverDetail
-from ..serializers.userSerializers import AdminRightsSerializer, ResendOtpSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
+from ..serializers.userSerializers import AdminRightsSerializer, ResendOtpSerializer, UpdateTeamMemberSerializer, ListTeamMemberSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
 from Uber import settings
 
 from django.core.mail import send_mail
@@ -170,28 +175,6 @@ class MobileNumberView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AddTeamMemberView(CreateAPIView):
-
-    serializer_class = AddTeamMemberSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            data = {
-                "data": serializer.data
-            }
-            return Response({
-                "status": "success",
-                "message": "Team Member added successfully.",
-                "data": data
-            }, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class ResendOtpView(UpdateAPIView):
     serializer_class = ResendOtpSerializer
     queryset = User.objects.all()
@@ -209,7 +192,6 @@ class ResendOtpView(UpdateAPIView):
         if not user:
             errors =  {"mobile_number": "User not found with this mobile number."}
             return Response({"status": "error", "message": "Validation Error", "errors":errors}, status=status.HTTP_404_NOT_FOUND)
-
         return user
 
     def update(self, request, *args, **kwargs):
@@ -339,7 +321,6 @@ class ProfileView(RetrieveAPIView):
         return self.request.user
 
 
-
 class ForgotPasswordView(CreateAPIView):
     serializer_class = ForgotPasswordSerializer
 
@@ -398,3 +379,103 @@ class ResetPasswordView(UpdateAPIView):
             }
             return Response({"status" : "success","message" : "Password changed successfully", "data" : data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddTeamMemberView(CreateAPIView):
+
+    serializer_class = AddTeamMemberSerializer
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('add_team_member')]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.save()
+            data = {
+                "first_name": data.first_name,
+                "last_name": data.last_name,
+                "mobile_number": data.mobile_number,
+                "email": data.email,
+                "role": data.role.role_name
+            }
+            return Response({
+                "status": "success",
+                "message": "Team Member added successfully.",
+                "data": data
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListTeamMemberView(ListAPIView):
+    '''
+        List all team members.
+    '''
+    serializer_class = ListTeamMemberSerializer
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('view_team_members')]
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name']
+
+    ordering_fields = ['name', 'created_at',]
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return User.objects.filter(user_type='admin', deleted_at=None).annotate(name=Concat(F('first_name'), Value(' '), F('last_name'), output_field=CharField()))
+
+
+class UpdateTeamMemberView(RetrieveUpdateAPIView):
+    '''
+        Update team member.
+    '''
+    serializer_class = UpdateTeamMemberSerializer
+    # authentication_classes = [JWTAuthentication]
+    # def get_permissions(self):
+    #     return [IsAuthenticated(), DynamicPermission('edit_team_member')]
+
+    def get_object(self):
+        try:
+            user = User.objects.get(pk=self.kwargs['pk'])
+        except User.DoesNotExist:
+            errors = {"user": "User not found."}
+            raise NotFound({"status": "error", "message": "Vallidation Error","errors": errors})
+        if user.deleted_at:
+            errors = {"user": "User not found."}
+            raise NotFound({"status": "error", "message": "Vallidation Error","errors": errors})
+        if user.user_type != 'admin':
+            errors = {"user_type": "You are not authorized to edit this user."}
+            raise NotFound({"status": "error", "message": "Vallidation Error","errors": errors})
+        return user
+
+
+class DestroyTeamMemberView(DestroyAPIView):
+    '''
+        Delete team member.
+    '''
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('remove_team_member')]
+
+    def get_object(self):
+        try:
+            return User.objects.get(pk=self.kwargs['pk'])
+        except User.DoesNotExist:
+            errors = {"user": "User not found."}
+            raise NotFound({"status": "error", "message": "Vallidation Error","errors": errors})
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user_type != 'admin':
+            errors = {"user_type": "You are not authorized to delete this user."}
+            return Response({"status": "error", "message": "Vallidation Error","errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        if instance.deleted_at:
+            errors = {"user_type":"This user is already deleted."}
+            return Response({"status": "error", "message": "Vallidation Error","errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        instance.deleted_at = timezone.now()
+        instance.save()
+        return Response({"status": "success", "message": "Team member deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

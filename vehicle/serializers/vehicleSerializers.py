@@ -171,7 +171,7 @@ class DriverVehiclesListSerializer(serializers.ModelSerializer):
         fields = ('id', 'vehicle_number', 'vehicle_type')
 
 
-class SelectVehilceSerializer(serializers.Serializer):
+class SelectVehicleSerializer(serializers.Serializer):
     vehicle_id = serializers.IntegerField(required=True)
 
 

@@ -176,10 +176,10 @@ class DriverPersonalDetailsViewSerializer(serializers.ModelSerializer):
 
 
 class ImpersonationSerializer(serializers.Serializer):
-    mobile_number = serializers.CharField(max_length=13)
+    id = serializers.IntegerField()
 
     def validate(self, data):
-        mobile_number = data.get('mobile_number')
-        if not User.objects.filter(mobile_number=mobile_number).exists():
-            raise serializers.ValidationError("User with this mobile number does not exist.")
+        id = data.get('id')
+        if not DriverRequest.objects.filter(id = id).exists():
+            raise serializers.ValidationError("User with this id does not exist.")
         return data

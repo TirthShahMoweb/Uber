@@ -290,7 +290,6 @@ class AddTeamMemberSerializer(serializers.ModelSerializer):
         if User.objects.filter(email = data["email"]).exists():
             errors = {"email":"Email already exist."}
             raise CustomValidationError(errors)
-
         if User.objects.filter(mobile_number = data["mobile_number"]).exists():
             errors = {"mobile_number":"Mobile number already exist."}
             raise CustomValidationError(errors)
@@ -299,11 +298,28 @@ class AddTeamMemberSerializer(serializers.ModelSerializer):
             errors = {"Role":"Role is not defined."}
             raise CustomValidationError(errors)
 
-        return data
 
     def create(self, validated_data):
+        password = validated_data.pop('password')
         user = User.objects.create(**validated_data)
+        user.set_password(password)
         user.user_type = 'admin'
         user.verification_code = secrets.token_hex(32)
         user.verification_code_created_at = timezone.now()
-        return validated_data
+        user.save()
+        return user
+
+
+class ListTeamMemberSerializer(serializers.ModelSerializer):
+    role_name = serializers.CharField(source='role.role_name', read_only=True)
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'mobile_number', 'email', 'role_name', 'created_at',)
+
+class UpdateTeamMemberSerializer(serializers.ModelSerializer):
+    role_name = serializers.CharField(source='role.role_name', read_only=True)
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'mobile_number', 'email', 'gender', 'role_name', 'role',)

@@ -3,11 +3,8 @@ from rest_framework.generics import ListAPIView, UpdateAPIView, CreateAPIView, R
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.views import APIView
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Value, CharField
@@ -16,7 +13,7 @@ from django.db.models.functions import Concat
 from utils.mixins import DynamicPermission
 from ..models import Vehicle, VehicleRequest
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleImageSerializer, SelectVehilceSerializer, DriverVehiclesListSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer
+from ..serializers.vehicleSerializers import VehicleImageSerializer, SelectVehicleSerializer, DriverVehiclesListSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer
 # , DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
@@ -52,7 +49,7 @@ class AdminVehicleStatusListView(ListAPIView):
 
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
-        return [IsAuthenticated, DynamicPermission('vehicle_view')]
+        return [IsAuthenticated(), DynamicPermission('vehicle_view')]
 
     filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
     search_fields = ['name', 'vehicle_number', 'driver__user__mobile_number']
@@ -77,7 +74,7 @@ class AdminVehicleStatusListView(ListAPIView):
 class DriverVehicleDetailsView(RetrieveAPIView):
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
-        return [IsAuthenticated, DynamicPermission('vehicle_view')]
+        return [IsAuthenticated(), DynamicPermission('vehicle_view')]
 
     serializer_class = VehicleDetailsSerializer
 
@@ -94,7 +91,7 @@ class AdminVehicleApprovalView(UpdateAPIView):
     '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
-        return [IsAuthenticated, DynamicPermission('vehicle_edit')]
+        return [IsAuthenticated(), DynamicPermission('vehicle_edit')]
 
     serializer_class = AdminVehicleApprovalSerializer
 
@@ -135,11 +132,12 @@ class AdminVehicleApprovalView(UpdateAPIView):
 
 class VehicleListView(ListAPIView):
 
-    queryset = VehicleRequest.objects.filter(status = 'approved', deleted_at=None).annotate(name=Concat(F('driver__user__first_name'), Value(' '), F('driver__user__last_name'), output_field=CharField()))
-    serializer_class = VehicleListViewSerializer
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
-        return [IsAuthenticated, DynamicPermission('vehicle_view')]
+        return [IsAuthenticated(), DynamicPermission('vehicle_view')]
+
+    queryset = VehicleRequest.objects.filter(status = 'approved', deleted_at=None).annotate(name=Concat(F('driver__user__first_name'), Value(' '), F('driver__user__last_name'), output_field=CharField()))
+    serializer_class = VehicleListViewSerializer
 
     filter_backends = [SearchFilter, OrderingFilter,DjangoFilterBackend]
     search_fields = ['vehicle_number', 'name', 'driver__user__mobile_number']
@@ -150,12 +148,13 @@ class VehicleListView(ListAPIView):
 
 class DraftVehicleListView(ListAPIView):
 
+    authentication_classes = [JWTAuthentication]
+    def get_permissions(self):
+        return [IsAuthenticated(), DynamicPermission('vehicle_view')]
+
     vehicleRequest = VehicleRequest.objects.values_list("driver_id", flat=True).distinct()
     queryset = DriverDetail.objects.filter(in_use=None).exclude(id__in=vehicleRequest).annotate(name=Concat(F('user__first_name'), Value(' '), F('user__last_name'), output_field=CharField()))
     serializer_class = DraftVehicleListViewSerializer
-    authentication_classes = [JWTAuthentication]
-    def get_permissions(self):
-        return [IsAuthenticated, DynamicPermission('vehicle_view')]
 
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
     search_fields = ['vehicle_number', 'name', 'driver__user__mobile_number']
@@ -192,14 +191,14 @@ class DriverVehiclesListView(ListAPIView):
         return vehicles
 
 
-class SelectVehilceView(UpdateAPIView):
+class SelectVehicleView(UpdateAPIView):
     '''
         Select vehicle for driver
     '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    serializer_class = SelectVehilceSerializer
+    serializer_class = SelectVehicleSerializer
 
     def get_object(self):
         user = self.request.user
