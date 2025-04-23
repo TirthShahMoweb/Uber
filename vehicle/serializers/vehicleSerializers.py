@@ -132,7 +132,7 @@ class VehicleListViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VehicleRequest
-        fields = ('id', 'name', 'vehicle_number', 'vehicle_type', 'status', 'created_at')
+        fields = ('id', 'name', 'vehicle_number', 'vehicle_type', 'status', 'created_at', 'action_at',)
 
 
 class VehicleDocumentSerializer(serializers.ModelSerializer):
@@ -163,6 +163,16 @@ class DraftVehicleListViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriverDetail
         fields = ('id', 'name', 'mobile_number', 'created_at', 'verified_at',)
+
+
+class DriverVehiclesListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
+        fields = ('id', 'vehicle_number', 'vehicle_type')
+
+
+class SelectVehilceSerializer(serializers.Serializer):
+    vehicle_id = serializers.IntegerField(required=True)
 
 
 # class ResubmissionVehicleSeralizer(serializers.ModelSerializer):

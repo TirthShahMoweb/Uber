@@ -38,6 +38,7 @@ urlpatterns = [
     path('add-driver-details', driverDetailsViews.DriverDetailsView.as_view()),
     path('admin-verify-driver/<int:id>', driverDetailsViews.AdminDriverApprovalView.as_view(), name = 'driver-verification-approval'),
     # path('driver-details/resubmit', driverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
+    path('ImpersonationView', driverDetailsViews.ImpersonationView.as_view()),
     path('driverPersonalDetailView/<int:id>', driverDetailsViews.DriverPersonalDetailsView.as_view()),
     path('driverDraftView', driverDetailsViews.DriverDraftView.as_view()),
     path('driverListView', driverDetailsViews.DriverListView.as_view()),

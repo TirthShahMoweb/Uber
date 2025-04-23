@@ -173,3 +173,13 @@ class DriverPersonalDetailsViewSerializer(serializers.ModelSerializer):
         model = DriverRequest
         fields = ('mobile_number', 'first_name', 'last_name', 'verification_documents', 'profile_pic', 'status', 'created_at', 'rejection_reason', 'verifier_name', 'action_at',)
         depth = 1
+
+
+class ImpersonationSerializer(serializers.Serializer):
+    mobile_number = serializers.CharField(max_length=13)
+
+    def validate(self, data):
+        mobile_number = data.get('mobile_number')
+        if not User.objects.filter(mobile_number=mobile_number).exists():
+            raise serializers.ValidationError("User with this mobile number does not exist.")
+        return data

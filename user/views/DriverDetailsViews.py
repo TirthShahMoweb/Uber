@@ -4,6 +4,7 @@ from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIV
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
 from django.db.models import F, Value
@@ -13,26 +14,24 @@ from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
-from ..models import DriverDetail, DocumentType, User, DriverRequest, RolePermission, Permission
-from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer
+from utils.mixins import DynamicPermission
+from ..models import DriverDetail, DocumentType, User, DriverRequest, Role
+from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ImpersonationSerializer
 
 
-class DynamicPermission(BasePermission):
+
+class ImpersonationPermission(BasePermission):
     """
-        DynamicPermission for all types of permissions.
+        Permission class to check if the user has permission to impersonate another user.
     """
-    def __init__(self, required_permissions):
-        self.required_permissions = required_permissions
-
     def has_permission(self, request, view):
         role = request.user.role
         if role is None:
             return False
         if request.user.user_type != 'admin':
             return False
-        permissions = RolePermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
-        required_permissions = self.required_permissions
-        if bool(required_permissions in list(permissions)):
+        role = Role.objects.filter(id = role.id).values_list('role_name', flat=True).first()
+        if role == 'CEO':
             return True
         return False
 
@@ -230,6 +229,30 @@ class AdminDriverApprovalView(UpdateAPIView):
             data = {'Rejection reason': rejection_reason}
             return Response({"status" : "success" , 'message': 'Details rejected' , "data" : data}, status=status.HTTP_200_OK)
         return Response({"status" : "error", "message" :"Validation Error", "errors":{"user": "Please provide a rejection reason"}}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ImpersonationView(CreateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, ImpersonationPermission]
+
+    serializer_class = ImpersonationSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)  # Pass user in context
+
+        if serializer.is_valid():
+            user = User.objects.filter(mobile_number = request.data['mobile_number']).first()
+            refresh = RefreshToken.for_user(user)
+            data = {"refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "role" : user.user_type}
+
+            return Response( {
+                "status": "success",
+                "message": "Impersonation request submitted successfully",
+                "data" : data}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class VerificationRequestResubmissionView(APIView):
