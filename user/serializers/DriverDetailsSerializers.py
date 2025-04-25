@@ -167,11 +167,12 @@ class DriverPersonalDetailsViewSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source = 'user.first_name')
     last_name = serializers.CharField(source = 'user.last_name')
     verifier_name = serializers.CharField(source = 'action_by.get_full_name', allow_null=True)
+    type = serializers.CharField(source = 'user.user_type', allow_null=True)
     verification_documents = DocumentRequiredSerializer(many=True)
 
     class Meta:
         model = DriverRequest
-        fields = ('mobile_number', 'first_name', 'last_name', 'verification_documents', 'profile_pic', 'status', 'created_at', 'rejection_reason', 'verifier_name', 'action_at',)
+        fields = ('mobile_number', 'first_name', 'last_name', 'verification_documents', 'type', 'profile_pic', 'status', 'created_at', 'rejection_reason', 'verifier_name', 'action_at',)
         depth = 1
 
 

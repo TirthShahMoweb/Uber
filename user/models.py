@@ -124,3 +124,37 @@ class Permission(BaseModel):
 class RolePermission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permissions = models.ManyToManyField(Permission ,related_name="permissions")
+
+
+class CancelByStatus(models.TextChoices):
+    CUSTOMER = 'customer', 'Customer'
+    DRIVER = 'driver', 'Driver'
+
+
+class TripStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    ACCEPTED = 'accepted', 'Accepted'
+    ON_GOING = 'on_going', 'On Going'
+    COMPLETED = 'completed', 'Completed'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+
+class Trip(BaseModel):
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="customer")
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver")
+    pickup_location = models.CharField(max_length=255)
+    drop_location = models.CharField(max_length=255)
+    pickup_time = models.DateTimeField()
+    drop_time = models.DateTimeField()
+    drop_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    drop_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    distance = models.DecimalField(max_digits=10, decimal_places=2)
+    estimated_time = models.DecimalField(max_digits=10, decimal_places=2)
+    fare = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=TripStatus, default='pending')
+    description = models.TextField(null=True, blank=True)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
+    cancelled_by = models.CharField(max_length=20, choices=CancelByStatus, null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)

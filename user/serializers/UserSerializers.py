@@ -48,7 +48,6 @@ class mobileNumberSerializer(serializers.Serializer):
         user = User.objects.get(
             mobile_number=mobile_number
         )
-        user.user_type = 'driver'
         user.otp = otp
         user.otp_created_at = timezone.now().time()
         user.save()
@@ -297,7 +296,7 @@ class AddTeamMemberSerializer(serializers.ModelSerializer):
         if data['role'] == None:
             errors = {"Role":"Role is not defined."}
             raise CustomValidationError(errors)
-
+        return data
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -313,10 +312,11 @@ class AddTeamMemberSerializer(serializers.ModelSerializer):
 class ListTeamMemberSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source='role.role_name', read_only=True)
     name = serializers.CharField(read_only=True)
-
+    type = serializers.CharField(source='user_type', read_only=True)
     class Meta:
         model = User
-        fields = ('id', 'name', 'mobile_number', 'email', 'role_name', 'created_at',)
+        fields = ('id', 'name', 'mobile_number', 'email', 'type', 'role_name', 'created_at',)
+
 
 class UpdateTeamMemberSerializer(serializers.ModelSerializer):
     role_name = serializers.CharField(source='role.role_name', read_only=True)

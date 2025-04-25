@@ -241,11 +241,18 @@ class ImpersonationView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)  # Pass user in context
 
         if serializer.is_valid():
-            driver = DriverRequest.objects.filter(id = request.data['id']).first()
-            refresh = RefreshToken.for_user(driver.user)
+            type = request.data.get('type')
+            if type == 'driver':
+                driver = DriverRequest.objects.filter(id = request.data['id']).first()
+                user = driver.user
+
+            if type == 'admin':
+                user = User.objects.filter(id = request.data['id']).first()
+
+            refresh = RefreshToken.for_user(user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
-                    "role" : driver.user.user_type}
+                    "role" : user.user_type}
 
             return Response( {
                 "status": "success",

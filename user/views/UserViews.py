@@ -231,10 +231,12 @@ class OtpVerificationView(CreateAPIView):
             refresh = RefreshToken.for_user(user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
-                    "role" : user.user_type,
-                    "approved": False}
+                    "role" : user.user_type,}
+            if user.user_type == 'driver':
+                data["approved"] = False
             if driver:
                 data["approved"] = True
+
             return Response({
                 "status": "success",
                 "message": "OTP verify successfully",
@@ -242,7 +244,6 @@ class OtpVerificationView(CreateAPIView):
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class SignupView(CreateAPIView):
     '''
@@ -269,6 +270,7 @@ class SignupView(CreateAPIView):
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ChangePasswordView(UpdateAPIView):
@@ -424,7 +426,8 @@ class ListTeamMemberView(ListAPIView):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        return User.objects.filter(user_type='admin', deleted_at=None).annotate(name=Concat(F('first_name'), Value(' '), F('last_name'), output_field=CharField()))
+        user = self.request.user
+        return User.objects.filter(user_type='admin', deleted_at=None).exclude(id = user.id).annotate(name=Concat(F('first_name'), Value(' '), F('last_name'), output_field=CharField()))
 
 
 class UpdateTeamMemberView(RetrieveUpdateAPIView):

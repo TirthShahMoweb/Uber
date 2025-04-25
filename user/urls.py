@@ -18,9 +18,11 @@ urlpatterns = [
     path('listTeamMemberView', userViews.ListTeamMemberView.as_view()),
     path('destroyTeamMemberView/<int:pk>', userViews.DestroyTeamMemberView.as_view()),
     path('updateTeamMemberView/<int:pk>', userViews.UpdateTeamMemberView.as_view()),
+
     # Roles
     path('createRoles', rolesViews.CreateRoles.as_view()),
     path('retrieveUpdateDestroyRoles/<int:pk>', rolesViews.RetrieveUpdateDestroyRoles.as_view()),
+
     # path('AssignAdminRoleView/', userViews.AssignAdminRoleView.as_view()),
     path('adminRights/<str:verification_code>',userViews.adminRightsView.as_view()),
     path('roleListView', rolesViews.RoleListView.as_view()),

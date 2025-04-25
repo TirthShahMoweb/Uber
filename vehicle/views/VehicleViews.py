@@ -177,6 +177,7 @@ class DriverVehiclesListView(ListAPIView):
         try:
             driver = DriverDetail.objects.get(user=user)
             vehicles = Vehicle.objects.filter(driver=driver.id, deleted_at=None)
+
         except DriverDetail.DoesNotExist:
             errors = {
                 "Driver": "Driver details not found"
