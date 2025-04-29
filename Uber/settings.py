@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)  # Create a logger object
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+open_route_service_key = '5b3ce3597851110001cf624850c190f4ff394eb4a83c14300af5c636'
+
+# settings.py
+TIME_ZONE = 'Asia/Kolkata'
+USE_TZ = True  # Make sure timezone support is enabled
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/

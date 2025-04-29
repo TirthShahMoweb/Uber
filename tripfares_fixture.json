@@ -1,0 +1,50 @@
+[
+    {
+      "model": "user.tripfares",
+      "pk": 1,
+      "fields": {
+        "vehicle_type": "2 wheeler",
+        "normal_fare": "7.00",
+        "night_time_fare": "3.00",
+        "peak_time_fare": "2.50",
+        "night_time_starting": "22:30:00",
+        "night_time_ending": "07:00:00",
+        "peak_time_morning_starting": "09:00:00",
+        "peak_time_morning_ending": "11:00:00",
+        "peak_time_evening_starting": "18:00:00",
+        "peak_time_evening_ending": "20:00:00"
+      }
+    },
+    {
+      "model": "user.tripfares",
+      "pk": 2,
+      "fields": {
+        "vehicle_type": "3 wheeler",
+        "normal_fare": "10.00",
+        "night_time_fare": "3.50",
+        "peak_time_fare": "2.00",
+        "night_time_starting": "22:30:00",
+        "night_time_ending": "07:00:00",
+        "peak_time_morning_starting": "09:00:00",
+        "peak_time_morning_ending": "11:00:00",
+        "peak_time_evening_starting": "18:00:00",
+        "peak_time_evening_ending": "20:00:00"
+      }
+    },
+    {
+      "model": "user.tripfares",
+      "pk": 3,
+      "fields": {
+        "vehicle_type": "4 wheeler",
+        "normal_fare": "15.00",
+        "night_time_fare": "4.00",
+        "peak_time_fare": "3.00",
+        "night_time_starting": "22:30:00",
+        "night_time_ending": "07:00:00",
+        "peak_time_morning_starting": "09:00:00",
+        "peak_time_morning_ending": "11:00:00",
+        "peak_time_evening_starting": "18:00:00",
+        "peak_time_evening_ending": "20:00:00"
+      }
+    }
+  ]

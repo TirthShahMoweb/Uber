@@ -96,9 +96,12 @@ class ResendOtpSerializer(serializers.Serializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    address = serializers.CharField(required = False)
+    dob = serializers.DateField(required = False)
+
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'gender', 'mobile_number', 'user_type')
+        fields = ('first_name', 'last_name', 'gender', 'mobile_number', 'user_type', 'address', 'dob')
 
 
     def validate(self, data):
@@ -122,6 +125,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
         if User.objects.filter(mobile_number=mobile_number).exists():
             errors = {"mobile_number": "Mobile Number already exists."}
             raise CustomValidationError(errors)
+
+        if data['user_type'] == 'customer':
+            if not data['dob']:
+                errors = {"dob": "Date of birth is required"}
+                raise CustomValidationError(errors)
+
+            if not data['address']:
+                errors = {"address": "Address is required"}
+                raise CustomValidationError(errors)
 
         if data['user_type'] == 'admin':
             errors = {"mobile_number": "You Can't select your self as Admin."}
@@ -201,10 +213,11 @@ class ChangePasswordSerializer(serializers.Serializer):
         return validated_data
 
 
+
 class updateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'mobile_number', 'gender',)
+        fields = ('first_name', 'last_name', 'email', 'mobile_number', 'gender', 'profile_pic', 'thumbnail_pic')
 
 
 class ForgotPasswordSerializer(serializers.Serializer):

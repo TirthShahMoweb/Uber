@@ -45,6 +45,8 @@ class User(AbstractUser, BaseModel):
     verification_code_created_at = models.DateTimeField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices = GenderChoices, null=True, blank=True)
     user_type = models.CharField(max_length=10, choices = UserTypeChoices, default='customer')
+    dob = models.DateField(null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
     role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True)
 
 
@@ -139,17 +141,25 @@ class TripStatus(models.TextChoices):
     CANCELLED = 'cancelled', 'Cancelled'
 
 
+class WheelerChoices(models.TextChoices):
+    TWO_WHEELER = '2 Wheeler', '2 Wheeler'
+    THREE_WHEELER = '3 Wheeler', '3 Wheeler'
+    FOUR_WHEELER = '4 Wheeler', '4 Wheeler'
+
+
 class Trip(BaseModel):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="customer")
-    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver")
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver", null=True, blank=True)
+    vehicle_id = models.ForeignKey('vehicle.Vehicle', on_delete=models.SET_NULL, null=True, blank=True)
+    vehicle_type = models.CharField(max_length=10, choices=WheelerChoices, null=True, blank=True)
     pickup_location = models.CharField(max_length=255)
     drop_location = models.CharField(max_length=255)
-    pickup_time = models.DateTimeField()
-    drop_time = models.DateTimeField()
-    drop_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    drop_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    pickup_location_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    pickup_location_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_time = models.DateTimeField(null=True, blank=True)
+    drop_time = models.DateTimeField(null=True, blank=True)
+    drop_location_latitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
+    drop_location_longitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
+    pickup_location_latitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
+    pickup_location_longitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
     distance = models.DecimalField(max_digits=10, decimal_places=2)
     estimated_time = models.DecimalField(max_digits=10, decimal_places=2)
     fare = models.DecimalField(max_digits=10, decimal_places=2)
@@ -158,3 +168,16 @@ class Trip(BaseModel):
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
     cancelled_by = models.CharField(max_length=20, choices=CancelByStatus, null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+
+
+class TripFare(BaseModel):  
+    vehicle_type = models.CharField(max_length=50)
+    normal_fare = models.DecimalField(max_digits=10, decimal_places=2)
+    night_time_fare = models.DecimalField(max_digits=10, decimal_places=2)
+    peak_time_fare = models.DecimalField(max_digits=10, decimal_places=2)
+    night_time_starting = models.TimeField()
+    night_time_ending = models.TimeField()
+    peak_time_morning_starting = models.TimeField()
+    peak_time_morning_ending = models.TimeField()
+    peak_time_evening_starting = models.TimeField()
+    peak_time_evening_ending = models.TimeField()

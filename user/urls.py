@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import userViews, rolesViews, permissionViews, driverDetailsViews, languageViews
+from .views import userViews, rolesViews, permissionViews, driverDetailsViews, languageViews, tripViews
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # Generates access & refresh token
     TokenRefreshView      # Refreshes access token
@@ -49,6 +49,11 @@ urlpatterns = [
     path('driverListView', driverDetailsViews.DriverListView.as_view()),
     path('languagesListView', languageViews.LanguageListView.as_view()),
     path('userCountView', driverDetailsViews.UserCountView.as_view()),
+
+    # Trip Details
+    path('tripDetails', tripViews.TripDetails.as_view()),
+    path('addTripDetails', tripViews.AddTripDetails.as_view()),
+
 
     # # Vehicle Details
     # path('addVehicle/', VehicleViews.addVehicleView.as_view()),

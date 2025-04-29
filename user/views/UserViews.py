@@ -245,6 +245,7 @@ class OtpVerificationView(CreateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SignupView(CreateAPIView):
     '''
         Signup API for User using CreateAPIView
@@ -270,7 +271,6 @@ class SignupView(CreateAPIView):
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class ChangePasswordView(UpdateAPIView):
