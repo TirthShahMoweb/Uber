@@ -3,154 +3,99 @@
     "model": "user.role",
     "pk": 1,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.393Z",
+        "created_at": "2025-03-25T05:53:38.283Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "CEO",
-        "description": "Oversees the company's strategic direction and overall performance."
+        "role_name": "Manager",
+        "description": "Manages specific departments or teams. Has oversight over certain areas and can manage users within those areas."
     }
 },
 {
     "model": "user.role",
     "pk": 2,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.408Z",
+        "created_at": "2025-03-25T05:53:38.286Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "CTO",
-        "description": "Leads the technical team, manages technical resources, and ensures innovation and scalability of the app."
+        "role_name": "CEO",
+        "description": "The CEO oversees the entire organization, sets strategic goals, and makes high-level decisions. They have access to all areas of the application, can view and manage company-wide analytics and reports, and can approve major changes and updates."
     }
 },
 {
     "model": "user.role",
     "pk": 3,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.410Z",
+        "created_at": "2025-03-25T05:53:38.287Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "COO",
-        "description": "Supervises operational aspects of the company, focusing on efficiency and processes."
+        "role_name": "CFO",
+        "description": "The CFO handles the financial aspects of the company. They manage finance teams, review and approve budgets and financial plans, and oversee payment processing and transaction data. They have access to financial data and reports."
     }
 },
 {
     "model": "user.role",
     "pk": 4,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.411Z",
+        "created_at": "2025-03-25T05:53:38.287Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Technical Manager",
-        "description": "Manages the development team, assigns technical tasks, and ensures timely delivery of technical solutions."
+        "role_name": "COO",
+        "description": "The COO manages the day-to-day operations of the company. They oversee operations teams, view and manage ride data and performance metrics, and approve operational changes and improvements."
     }
 },
 {
     "model": "user.role",
     "pk": 5,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.413Z",
+        "created_at": "2025-03-25T05:53:38.288Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Developer",
-        "description": "Builds, maintains, and improves the app's functionality."
+        "role_name": "CTO",
+        "description": "The CTO is responsible for the technical direction of the company. They manage development teams, oversee system architecture, and approve technical changes and deployments. They have access to all technical areas of the application."
     }
 },
 {
     "model": "user.role",
     "pk": 6,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.414Z",
+        "created_at": "2025-03-25T05:53:38.288Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Business Analyst",
-        "description": "Analyzes business needs, gathers requirements, and ensures alignment with the app's goals."
+        "role_name": "BDO",
+        "description": "The BDA focuses on business development and expansion. They manage business development teams, view and manage partnership and expansion data, and review and approve business development plans and proposals."
     }
 },
 {
     "model": "user.role",
     "pk": 7,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.416Z",
+        "created_at": "2025-03-25T05:53:38.288Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Driver Review Specialist",
-        "description": "Reviews and verifies driver profiles, documents, and driving records for approval."
+        "role_name": "Analyst",
+        "description": "Analysts analyze data and provide insights. They access analytics and data reporting tools, view and analyze company-wide performance metrics, and create and share reports with executive roles."
     }
 },
 {
     "model": "user.role",
     "pk": 8,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.418Z",
+        "created_at": "2025-03-25T05:53:38.289Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Operations Manager",
-        "description": "Handles day-to-day management, including coordinating between drivers and riders, and resolving operational challenges."
+        "role_name": "Developer",
+        "description": "Developers build and maintain the application. They have access to development tools and environments, review and manage code and technical documentation, and deploy updates and changes to the application."
     }
 },
 {
     "model": "user.role",
     "pk": 9,
     "fields": {
-        "created_at": "2025-04-21T07:05:35.419Z",
+        "created_at": "2025-03-25T05:53:38.289Z",
         "updated_at": null,
         "deleted_at": null,
-        "role_name": "Fleet Manager",
-        "description": "Manages vehicle assignments, maintenance schedules, and ensures vehicle compliance with legal standards."
-    }
-},
-{
-    "model": "user.role",
-    "pk": 10,
-    "fields": {
-        "created_at": "2025-04-21T07:05:35.421Z",
-        "updated_at": null,
-        "deleted_at": null,
-        "role_name": "Marketing Manager",
-        "description": "Drives campaigns, improves user acquisition, and manages app visibility in the market."
-    }
-},
-{
-    "model": "user.role",
-    "pk": 11,
-    "fields": {
-        "created_at": "2025-04-21T07:05:35.423Z",
-        "updated_at": null,
-        "deleted_at": null,
-        "role_name": "Data Analyst",
-        "description": "Extracts and analyzes data to identify trends, optimize operations, and inform strategic decisions."
-    }
-},
-{
-    "model": "user.role",
-    "pk": 12,
-    "fields": {
-        "created_at": "2025-04-21T07:05:35.425Z",
-        "updated_at": null,
-        "deleted_at": null,
-        "role_name": "Support Agent",
-        "description": "Assists users and drivers with inquiries, complaints, and issue resolution."
-    }
-},
-{
-    "model": "user.role",
-    "pk": 13,
-    "fields": {
-        "created_at": "2025-04-21T07:05:35.428Z",
-        "updated_at": null,
-        "deleted_at": null,
-        "role_name": "Payment Manager",
-        "description": "Oversees payment processing, ensures secure transactions, and handles refunds."
-    }
-},
-{
-    "model": "user.role",
-    "pk": 14,
-    "fields": {
-        "created_at": "2025-04-22T08:13:22.026Z",
-        "updated_at": "2025-04-22T08:13:22.027Z",
-        "deleted_at": null,
-        "role_name": "CFO",
-        "description": "It will manage everything related to finance."
+        "role_name": "Reviewer",
+        "description": "Reviewers ensure content and features meet the platform's standards. They review and approve content and features submitted by others before publication."
     }
 }
 ]

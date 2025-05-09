@@ -170,7 +170,7 @@ class Trip(BaseModel):
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
 
-class TripFare(BaseModel):  
+class TripFare(BaseModel):
     vehicle_type = models.CharField(max_length=50)
     normal_fare = models.DecimalField(max_digits=10, decimal_places=2)
     night_time_fare = models.DecimalField(max_digits=10, decimal_places=2)
