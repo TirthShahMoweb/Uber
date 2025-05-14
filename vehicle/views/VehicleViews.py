@@ -7,13 +7,14 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F, Value, CharField
+from django.db.models import F, Value, CharField, Case, When, BooleanField
 from django.db.models.functions import Concat
+from django.db.models import Subquery, OuterRef
 
 from utils.mixins import DynamicPermission
-from ..models import Vehicle, VehicleRequest
+from ..models import Vehicle, VehicleRequest, DocumentType
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleImageSerializer, SelectVehicleSerializer, DriverVehiclesListSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer
+from ..serializers.vehicleSerializers import VehicleImageSerializer, SelectVehicleSerializer, DriverVehiclesListSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer, VehicleFrontImageSerializer
 # , DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 
@@ -22,12 +23,9 @@ class addVehicleView(CreateAPIView):
     '''
         Add vehicle details for verification
     '''
-
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
     serializer_class = VehicleImageSerializer
-
     def create(self, request):
         data = request.data
         user = request.user
@@ -168,7 +166,6 @@ class DriverVehiclesListView(ListAPIView):
     '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
     serializer_class = DriverVehiclesListSerializer
 
 
@@ -176,20 +173,73 @@ class DriverVehiclesListView(ListAPIView):
         user = self.request.user
         try:
             driver = DriverDetail.objects.get(user=user)
-            vehicles = Vehicle.objects.filter(driver=driver.id, deleted_at=None)
+            vehicle_front_image_subquery = DocumentType.objects.filter(
+                vehicle_approve_documents=OuterRef('pk'),
+                document_type="vehicle_front_image"
+            ).values('id')[:1]
+
+            vehicles = Vehicle.objects.filter(driver=driver.id, deleted_at=None).prefetch_related("verification_documents").annotate(
+                selected=Case(When(id=driver.in_use.id, then=True), default=False, output_field=BooleanField()),
+                document_type_id=Subquery(vehicle_front_image_subquery)
+            )
+            # for i in vehicles:
+            #     print("id : ", i.id,
+            #             ",vehicle_number:", i.vehicle_number,
+            #             ",vehicle_type:", i.vehicle_type,
+            #             ",selected:", i.selected,
+            #             ",vehicle_front_image:", i.image)
+
 
         except DriverDetail.DoesNotExist:
             errors = {
                 "Driver": "Driver details not found"
             }
             return Response({"status": "error", "message": "Validation Error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-
         except Vehicle.DoesNotExist:
             errors = {
                 "Vehicle": "Vehicle details not found"
             }
             return Response({"status": "error", "message": "Validation Error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
         return vehicles
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     # for i in queryset:
+    #     #     print(i.image)
+    #     document_serializer = self.get_serializer(queryset, many=True)
+    #     x = VehicleFrontImageSerializer(data = document_serializer.data, many=True)
+    #     x.is_valid(raise_exception=True)
+    #     # print(x.data, "PRINT SOMETTHING CRAZY")
+    #     data = {"data":document_serializer.data}
+    #     # print(document_serializer.data)
+    #     # for i in document_serializer.data:
+    #     #     x = i["image"]
+    #     #     c = DocumentType.objects.get(id=x)
+    #     #     print(c.document_image)
+    #     return Response({
+    #         "status": "success",
+    #         "message": "Document types fetched successfully",
+    #         "data": data
+    #     }, status=status.HTTP_200_OK)
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        document_serializer = self.get_serializer(queryset, many=True)
+        # print(document_serializer.data)
+        for i in document_serializer.data:
+            document_type_obj = DocumentType.objects.filter(id = i['document_type_id'])
+            document_type_serializer = VehicleFrontImageSerializer(document_type_obj, many=True, context={'request': request})
+            # import pdb
+            # pdb.set_trace()
+            i['vehicle_front_image'] = document_type_serializer.data[0]['document_image']
+            # print(document_type_serializer.data[0]['document_image'], "qwerty")
+        data = {"data":document_serializer.data}
+        return Response({
+            "status": "success",
+            "message": "Document types fetched successfully",
+            "data": data
+        }, status=status.HTTP_200_OK)
 
 
 class SelectVehicleView(UpdateAPIView):

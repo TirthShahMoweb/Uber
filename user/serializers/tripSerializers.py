@@ -51,6 +51,5 @@ class TripSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context.get('user')
-        print(validated_data,"----------------------------------------------")
         trip = Trip.objects.create(customer=user, **validated_data)
-        return validated_data
+        return trip

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from ..models import DriverDetail, DocumentRequired, User, DocumentType, DriverRequest
+from ..models import DriverDetail, DocumentRequired, User, DocumentType, DriverRequest, Trip
 
 
 
@@ -182,3 +182,12 @@ class ImpersonationSerializer(serializers.Serializer):
         if not DriverRequest.objects.filter(id = id).exists():
             raise serializers.ValidationError("User with this id does not exist.")
         return data
+
+
+class DriverTripPendingSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='customer.first_name')
+    last_name = serializers.CharField(source='customer.last_name')
+
+    class Meta:
+        model = Trip
+        fields = ('id', 'pickup_location', 'drop_location', 'vehicle_type', 'distance', 'fare', 'first_name', 'last_name')

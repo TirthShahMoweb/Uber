@@ -51,6 +51,7 @@ AUTH_USER_MODEL = 'user.User'
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -64,6 +65,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_api_logger',
     'django_filters',
+    'channels',
+
 ]
 
 MIDDLEWARE = [
@@ -105,7 +108,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Uber.wsgi.application'
+# WSGI_APPLICATION = 'Uber.wsgi.application'
+ASGI_APPLICATION = 'Uber.asgi.application'
+
 DRF_API_LOGGER_DATABASE = True
 
 # Database
@@ -178,7 +183,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -207,6 +211,12 @@ EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
 }
 
 SWAGGER_SETTINGS = {

@@ -15,8 +15,8 @@ from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
 from utils.mixins import DynamicPermission
-from ..models import DriverDetail, DocumentType, User, DriverRequest, Role
-from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ImpersonationSerializer
+from ..models import DriverDetail, DocumentType, User, DriverRequest, Role, Trip
+from ..serializers.driverDetailsSerializers import DriverSerializer, DriverTripPendingSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ImpersonationSerializer
 
 
 
@@ -262,7 +262,20 @@ class ImpersonationView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class DriverTripPendingView(ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = DriverTripPendingSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        driver = get_object_or_404(DriverDetail.objects.select_related('in_use'), user=user)
+        type = driver.in_use.vehicle_type if driver.in_use else None
+        trip = Trip.objects.filter(vehicle_type=type).select_related('customer')
+        return trip
+
 # class VerificationRequestResubmissionView(APIView):
+
 
 #     authentication_classes = [JWTAuthentication]
 #     permission_classes = [IsAuthenticated]
