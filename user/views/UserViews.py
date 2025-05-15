@@ -227,7 +227,7 @@ class OtpVerificationView(CreateAPIView):
 
         if serializer.is_valid():
             user = User.objects.filter(mobile_number = data['mobile_number']).first()
-            driver = DriverDetail.objects.filter(user=user).exists()
+            driver = DriverDetail.objects.filter(user=user).first()
             refresh = RefreshToken.for_user(user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
@@ -236,6 +236,9 @@ class OtpVerificationView(CreateAPIView):
                 data["approved"] = False
             if driver:
                 data["approved"] = True
+                driver.is_online = True
+                driver.last_online_at = timezone.now()
+                driver.save()
 
             return Response({
                 "status": "success",

@@ -81,6 +81,8 @@ class DriverDetail(BaseModel):
     amount_received = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     verified_at = models.DateTimeField(null = True)
     verification_documents = models.ManyToManyField('DocumentRequired', related_name='driver_detail_documents')
+    is_online = models.BooleanField(default=False)
+    last_online_at = models.DateTimeField(null=True, blank=True)
 
 
 class DriverRequest(BaseModel):
@@ -131,7 +133,7 @@ class RolePermission(BaseModel):
 class CancelByStatus(models.TextChoices):
     CUSTOMER = 'customer', 'Customer'
     DRIVER = 'driver', 'Driver'
-
+    AUTO = 'auto', 'Auto'
 
 class TripStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'

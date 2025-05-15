@@ -1,20 +1,21 @@
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from django.shortcuts import get_object_or_404
-import pytz
-from decimal import Decimal
-from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone
-from datetime import time
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from decimal import Decimal
 from datetime import timedelta
 import math
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from ..models import DriverRequest, DocumentRequired, DocumentType, DriverDetail, User, Trip, TripFare
-from ..serializers.tripSerializers import TripSerializer
+import pytz
+
+from ..models import DriverRequest, DriverDetail, User, TripFare, Trip
+from ..serializers.tripSerializers import TripSerializer, TripCancelSerializer, TripApprovalSerializer
 from utils.helper import calculate_road_distance_and_time
 from Uber.settings import open_route_service_key
 
@@ -74,7 +75,7 @@ from Uber.settings import open_route_service_key
 #                      'total_fare':total_fare}
 
 #             return Response({"status":"success","message":"Successfully","data":data}, status=status.HTTP_200_OK)
-#         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+#         return Response(serializecmdr.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
 class TripDetails(CreateAPIView):
@@ -143,7 +144,6 @@ class AddTripDetails(CreateAPIView):
 
         if serializer.is_valid():
             trip = serializer.save()
-            print(user)
             user = get_object_or_404(User, mobile_number=user)
             data = {
                 "id": trip.id,
@@ -169,7 +169,10 @@ class AddTripDetails(CreateAPIView):
                     {
                         'type': 'send_trip_update',
                         'message': {
-                            'status': 'New trip available',
+                            'status': '',
+                            'status': 'success',
+                            'message': 'New trip available',
+                            'event': 'send_trip_update',
                             'data': data
                         }
                     }
@@ -177,3 +180,89 @@ class AddTripDetails(CreateAPIView):
             return Response({"status": "success", "message": "Successfully added trip", "data": data}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TripCancelView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = TripCancelSerializer
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'))
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip =self.get_object()
+        serializer = self.get_serializer(trip, data=request.data, context={"user":request.user})
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.save()
+        data = {"cancelled_by": validated_data.cancelled_by,
+                "description": validated_data.description,
+                "customer_name": f"{validated_data.customer.first_name} {validated_data.customer.last_name}"}
+
+        if validated_data.cancelled_by == "driver":
+            data["driver_name"]= f"{validated_data.driver.first_name} {validated_data.driver.last_name}"
+
+
+        vehicle_type = validated_data.vehicle_type
+        drivers = DriverDetail.objects.filter(in_use__vehicle_type=vehicle_type)
+        channel_layer = get_channel_layer()
+
+        for driver in drivers:
+            group_name = f'driver_{driver.user.id}'
+            print(f"📢 Sending WebSocket update to group: {group_name}")  # Debugging
+
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    'type': 'remove_trip_update',
+                    'message': {
+                        'status': '',
+                        'status': 'success',
+                        'message': 'Trip removed ID',
+                        'event': 'remove_trip_update',
+                        'data': {"id": validated_data.id}
+                    }
+                }
+            )
+        return Response({"status": "success", "message": "Successfully trip got cancelled", "data": data}, status=status.HTTP_200_OK)
+
+
+class TripApprovalView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = TripApprovalSerializer
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'))
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip =self.get_object()
+        serializer = self.get_serializer(trip, data=request.data, context={"user":request.user})
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.save()
+        data = {"driver_name": f"{validated_data.driver.first_name} {validated_data.driver.last_name}",
+                "vehicle_number": f"{validated_data.vehicle_id.vehicle_number}"}
+
+        vehicle_type = trip.vehicle_type
+        drivers = DriverDetail.objects.filter(in_use__vehicle_type=vehicle_type)
+        channel_layer = get_channel_layer()
+
+        for driver in drivers:
+            group_name = f'driver_{driver.user.id}'
+            print(f"📢 Sending WebSocket update to group: {group_name}")  # Debugging
+
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    'type': 'remove_trip_update',
+                    'message': {
+                        'status': 'success',
+                        'message': 'Trip Approved ID',
+                        'event': 'remove_trip_update',
+                        'data': {"id": validated_data.id}
+                    }
+                }
+            )
+        return Response({"status": "success", "message": "Successfully trip got accepted", "data": data}, status=status.HTTP_200_OK)
