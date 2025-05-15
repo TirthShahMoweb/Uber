@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from ..models import Vehicle, VehicleRequest, DocumentType
 from user.models import DriverDetail
-
+from vehicle.models import DocumentType
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -165,11 +165,52 @@ class DraftVehicleListViewSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'mobile_number', 'created_at', 'verified_at',)
 
 
+class VerificationDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentType  # Assuming this is your model name
+        fields = ("document_type")
+
+    def to_representation(self, instance):
+        """Filter only the 'vehicle_front_image' document type."""
+        if instance.document_type == "vehicle_front_image":
+            print(instance.document_image," ")
+            return instance.document_image.url
+        return None
+
+
+
 class DriverVehiclesListSerializer(serializers.ModelSerializer):
+    selected = serializers.BooleanField(required=True)
+    # image = serializers.CharField()
+    document_type_id = serializers.IntegerField()
+
+    # vehicle_front_image = VerificationDocumentSerializer(source="verification_documents", many=True)
     class Meta:
         model = Vehicle
-        fields = ('id', 'vehicle_number', 'vehicle_type')
+        fields = ('id', 'vehicle_number', 'vehicle_type', 'selected', 'document_type_id',)
 
+    # def to_representation(self, instance):
+    #     """Ensure we return only one valid image, not a list with nulls."""
+    #     representation = super().to_representation(instance)
+    #     images = representation.get("vehicle_front_image", [])
+    #     print(representation)
+    #     print(images)
+    #     representation["vehicle_front_image"] = next((f"{img}" for img in images if img is not None), None)
+    #     representation["vehicle_front_image"] = next((f"http://192.168.50.7:8000{img}" for img in images if img is not None), None)
+    #     return representation
+
+class VehicleFrontImageSerializer(serializers.ModelSerializer):
+    document_image = serializers.ImageField(allow_null=True)
+
+    class Meta:
+        model = DocumentType
+        fields = ('id', 'document_image', 'document_type', )
+
+    # def validate(self, attrs):
+    #     print("hello World", attrs)
+    #     front_image = DocumentType.objects.filter(id = attrs.get("image")).values('document_type')
+    #     print(front_image,"ello TIRTH SHAH")
+    #     return attrs
 
 class SelectVehicleSerializer(serializers.Serializer):
     vehicle_id = serializers.IntegerField(required=True)

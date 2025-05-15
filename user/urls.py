@@ -49,11 +49,11 @@ urlpatterns = [
     path('driverListView', driverDetailsViews.DriverListView.as_view()),
     path('languagesListView', languageViews.LanguageListView.as_view()),
     path('userCountView', driverDetailsViews.UserCountView.as_view()),
+    path('driverTripPendingView', driverDetailsViews.DriverTripPendingView.as_view(), name='driver_trip_pending'),
 
     # Trip Details
     path('tripDetails', tripViews.TripDetails.as_view()),
-    path('addTripDetails', tripViews.AddTripDetails.as_view()),
-
+    path('addTripDetails', tripViews.AddTripDetails.as_view(), name='add_trip'),
 
     # # Vehicle Details
     # path('addVehicle/', VehicleViews.addVehicleView.as_view()),

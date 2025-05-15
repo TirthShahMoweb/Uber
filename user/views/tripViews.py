@@ -3,14 +3,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.shortcuts import get_object_or_404
 import pytz
 from decimal import Decimal
-
+from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone
 from datetime import time
 from datetime import timedelta
 import math
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from ..models import DriverRequest, DocumentRequired, DocumentType, DriverDetail, User, Trip, TripFare
 from ..serializers.tripSerializers import TripSerializer
 from utils.helper import calculate_road_distance_and_time
@@ -75,14 +77,14 @@ from Uber.settings import open_route_service_key
 #         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
-class TripDetails(ListAPIView):
+class TripDetails(CreateAPIView):
     '''
         TRIP DETAILS
     '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         india_timezone = pytz.timezone('Asia/Kolkata')
         current_time_utc = timezone.now()
         current_time_ist = current_time_utc.astimezone(india_timezone)
@@ -113,15 +115,12 @@ class TripDetails(ListAPIView):
         for fare in fares:
             if current_time_only >= fare.night_time_starting or current_time_only < fare.night_time_ending:
                 total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare + fare.night_time_fare ) * distance
-                print("Apply night fare")
 
             elif fare.peak_time_morning_starting <= current_time_only <= fare.peak_time_morning_ending or fare.peak_time_evening_starting <= current_time_only <= fare.peak_time_evening_starting:
                 total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare + fare.peak_time_fare ) * distance
-                print("Apply peak fare")
 
             else:
                 total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare * distance)
-                print("Apply normal fare")
 
         data  = {"distance": f"{distance} km",
                     'durations': (current_time_ist + timedelta(minutes=math.ceil(durations))).strftime("%I:%M %p"),
@@ -134,19 +133,47 @@ class TripDetails(ListAPIView):
 
 
 class AddTripDetails(CreateAPIView):
-    '''
-        Add Trip Details
-    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TripSerializer
 
     def create(self, request, *args, **kwargs):
         user = request.user
-        serializer = self.get_serializer(data=request.data, context={'user':user})
+        serializer = self.get_serializer(data=request.data, context={'user': user})
+
         if serializer.is_valid():
-            user = serializer.save()
+            trip = serializer.save()
             print(user)
-            data = {"distance": f"km"}
-            return Response({"status":"success","message":"Successfully","data":data}, status=status.HTTP_201_CREATED)
+            user = get_object_or_404(User, mobile_number=user)
+            data = {
+                "id": trip.id,
+                "distance": f"{trip.distance} km",
+                "pickup_location": trip.pickup_location,
+                "drop_location": trip.drop_location,
+                "vehicle_type": trip.vehicle_type,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "fare": f"Rs. {trip.fare}"
+            }
+
+            vehicle_type = trip.vehicle_type
+            drivers = DriverDetail.objects.filter(in_use__vehicle_type=vehicle_type)
+            channel_layer = get_channel_layer()
+
+            for driver in drivers:
+                group_name = f'driver_{driver.user.id}'
+                print(f"📢 Sending WebSocket update to group: {group_name}")  # Debugging
+
+                async_to_sync(channel_layer.group_send)(
+                    group_name,
+                    {
+                        'type': 'send_trip_update',
+                        'message': {
+                            'status': 'New trip available',
+                            'data': data
+                        }
+                    }
+                )
+            return Response({"status": "success", "message": "Successfully added trip", "data": data}, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
