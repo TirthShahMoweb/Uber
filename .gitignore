@@ -8,6 +8,8 @@ db.sqlite3
 .env
 backup.json
 RolePermission.json
+*.log*
+.log*
 
 # IDE & OS files
 .vscode/

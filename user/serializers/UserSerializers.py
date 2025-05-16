@@ -86,8 +86,6 @@ class OtpVerificationSerializer(serializers.Serializer):
             if DriverRequest.objects.filter(user = user, status='pending').exists():
                 errors = {"login":  "Your application is under verification."}
                 raise CustomValidationError(errors)
-
-
         return data
 
 

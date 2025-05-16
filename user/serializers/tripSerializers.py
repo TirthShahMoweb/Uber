@@ -69,16 +69,13 @@ class TripCancelSerializer(serializers.ModelSerializer):
             errors = {"user_type": "Only customer and driver can cancel this Trip."}
             raise CustomValidationError(errors)
 
-        if attrs.get('cancel_by') != "auto":
-            errors = {"user_type": "It's long time! No driver found for your Trip."}
-            raise CustomValidationError(errors)
-
         if self.context.get('user').user_type == 'driver':
             trip_instance = self.instance
             if trip_instance.status == "cancelled":
                 errors = {"user_type": "This trip is already cancelled."}
                 raise CustomValidationError(errors)
-            print(trip_instance.status,"1234312343234 ")
+            print(trip_instance.status,"1234312343234")
+
             if trip_instance.status != "Accepted":
                 errors = {"user_type": "At this moment you can't cancel the Trip."}
                 raise CustomValidationError(errors)
