@@ -18,9 +18,15 @@ def calculate_road_distance_and_time(start_lat, start_lon, end_lat, end_lon, api
         headers=headers,
         json=body
     )
+    print(response.text,"response.text=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print(response.status_code,"response.status_code=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print(response.headers,"response.headers=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print(response.url,"response.url=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print(response.cookies,"response.cookies =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print(response.json(),"response.json =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 
     data = response.json()
-    # print(data,"----------")
+
     distance_in_meters = data['routes'][0]['summary']['distance']
     duration_in_seconds = data['routes'][0]['summary']['duration']
 

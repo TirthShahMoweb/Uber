@@ -10,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F, Value, CharField, Case, When, BooleanField
 from django.db.models.functions import Concat
 from django.db.models import Subquery, OuterRef
-
+from django.shortcuts import get_object_or_404
 from utils.mixins import DynamicPermission
 from ..models import Vehicle, VehicleRequest, DocumentType
 from user.models import DriverDetail
@@ -171,35 +171,26 @@ class DriverVehiclesListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        try:
-            driver = DriverDetail.objects.get(user=user)
-            vehicle_front_image_subquery = DocumentType.objects.filter(
-                vehicle_approve_documents=OuterRef('pk'),
-                document_type="vehicle_front_image"
-            ).values('id')[:1]
+        driver = get_object_or_404(DriverDetail, user=user)
+        print("Hello WOrld----------------------===", driver , driver.in_use)
+        vehicle_id = driver.in_use.id if driver.in_use else driver.in_use
+        in_use_vehicle = get_object_or_404(Vehicle, id=vehicle_id)
 
-            vehicles = Vehicle.objects.filter(driver=driver.id, deleted_at=None).prefetch_related("verification_documents").annotate(
-                selected=Case(When(id=driver.in_use.id, then=True), default=False, output_field=BooleanField()),
-                document_type_id=Subquery(vehicle_front_image_subquery)
-            )
-            # for i in vehicles:
-            #     print("id : ", i.id,
-            #             ",vehicle_number:", i.vehicle_number,
-            #             ",vehicle_type:", i.vehicle_type,
-            #             ",selected:", i.selected,
-            #             ",vehicle_front_image:", i.image)
+        vehicle_front_image_subquery = DocumentType.objects.filter(
+            vehicle_approve_documents=OuterRef('pk'),
+            document_type="vehicle_front_image"
+        ).values('id')[:1]
 
-
-        except DriverDetail.DoesNotExist:
-            errors = {
-                "Driver": "Driver details not found"
-            }
-            return Response({"status": "error", "message": "Validation Error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-        except Vehicle.DoesNotExist:
-            errors = {
-                "Vehicle": "Vehicle details not found"
-            }
-            return Response({"status": "error", "message": "Validation Error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+        vehicles = Vehicle.objects.filter(driver=driver.id, deleted_at=None).prefetch_related("verification_documents").annotate(
+            selected=Case(When(id=in_use_vehicle.id, then=True), default=False, output_field=BooleanField()),
+            document_type_id=Subquery(vehicle_front_image_subquery)
+        )
+        # for i in vehicles:
+        #     print("id : ", i.id,
+        #             ",vehicle_number:", i.vehicle_number,
+        #             ",vehicle_type:", i.vehicle_type,
+        #             ",selected:", i.selected,
+        #             ",vehicle_front_image:", i.image)
         return vehicles
 
     # def list(self, request, *args, **kwargs):
@@ -225,6 +216,7 @@ class DriverVehiclesListView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        print(queryset,"1234323432345432345434-----------------------")
         document_serializer = self.get_serializer(queryset, many=True)
         # print(document_serializer.data)
         for i in document_serializer.data:

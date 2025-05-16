@@ -10,7 +10,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
-
+from django.shortcuts import get_object_or_404
 from utils.mixins import DynamicPermission
 from ..models import User, Role, Permission, RolePermission, DriverDetail
 from ..serializers.userSerializers import AdminRightsSerializer, ResendOtpSerializer, UpdateTeamMemberSerializer, ListTeamMemberSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
@@ -227,7 +227,7 @@ class OtpVerificationView(CreateAPIView):
 
         if serializer.is_valid():
             user = User.objects.filter(mobile_number = data['mobile_number']).first()
-            driver = DriverDetail.objects.filter(user=user).exists()
+            driver = DriverDetail.objects.filter(user=user).first()
             refresh = RefreshToken.for_user(user)
             data = {"refresh": str(refresh),
                     "access": str(refresh.access_token),
@@ -236,6 +236,10 @@ class OtpVerificationView(CreateAPIView):
                 data["approved"] = False
             if driver:
                 data["approved"] = True
+                driver.is_online = True
+                driver.last_online_at = timezone.now()
+                driver.save()
+                data["online"] = driver.is_online
 
             return Response({
                 "status": "success",
@@ -482,3 +486,19 @@ class DestroyTeamMemberView(DestroyAPIView):
         instance.deleted_at = timezone.now()
         instance.save()
         return Response({"status": "success", "message": "Team member deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class UpdateDriverLastOnlineAtView(UpdateAPIView):
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        if user.user_type != "driver":
+            return Response({"status": "error", "message": "Vallidation Error","errors": "This is only for Drivers"}, status=status.HTTP_400_BAD_REQUEST)
+
+        driver = get_object_or_404(DriverDetail, user=user)
+        driver.last_online_at = timezone.now()
+        driver.save()
+        return Response({"status": "success", "message": "Driver updated successfully"}, status=status.HTTP_200_OK)

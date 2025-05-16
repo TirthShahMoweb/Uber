@@ -23,7 +23,6 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                 if user is not None and isinstance(user, User):
                     self.user = user
                     self.group_name = f'driver_{user.id}'
-                    print("self.group_name------------------------",self.group_name)
                     await self.channel_layer.group_add(self.group_name, self.channel_name)
                     await self.accept()
                 else:
@@ -39,6 +38,9 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def send_trip_update(self, event):
+        await self.send(text_data=json.dumps(event["message"]))
+
+    async def remove_trip_update(self, event):
         await self.send(text_data=json.dumps(event["message"]))
 
     @staticmethod

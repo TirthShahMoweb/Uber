@@ -16,20 +16,66 @@ from datetime import timedelta
 from decouple import config
 import logging
 
-logging.basicConfig(
-    level=logging.ERROR,  # Choose the log level
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# logging.basicConfig(
+#     level=logging.ERROR,  # Choose the log level
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+# )
+
 logger = logging.getLogger(__name__)  # Create a logger object
 
+CRON_LOG_FILENAME = os.path.join(BASE_DIR, 'log/cron.log')
+ERROR_LOG_FILENAME = os.path.join(BASE_DIR, 'log/error.log')
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "console": {
+            "format": '%(name)-12s %(levelname)-8s %(message)s',
+        },
+        "file": {
+            "format": '%(asctime)s  %(name)-12s %(levelname)-8s %(message)s',
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "console",
+        },
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "formatter": "file",
+            "filename": ERROR_LOG_FILENAME,
+        },
+        "cron_file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "formatter": "file",
+            "filename": CRON_LOG_FILENAME,
+        },
+    },
+    "loggers": {
+        "": {
+            "level": "DEBUG",
+            "handlers": ["console", "file"],
+        },
+        "cron_logger": {
+            "level": "INFO",
+            "handlers": ["cron_file"],
+            "propagate": False,
+        },
+    }
+}
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 open_route_service_key = '5b3ce3597851110001cf624850c190f4ff394eb4a83c14300af5c636'
 
 # settings.py
 TIME_ZONE = 'Asia/Kolkata'
-USE_TZ = True  # Make sure timezone support is enabled
+USE_TZ = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -38,17 +84,13 @@ USE_TZ = True  # Make sure timezone support is enabled
 # DEBUG = config('DEBUG', cast=bool, default=False)
 # ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-h7*4q*549%@sbg#e@n7dgoc8#b%y6a!86jc0!94+6&kk7l!_m4'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'user.User'
-
-# Application definition
 
 INSTALLED_APPS = [
     'daphne',
@@ -66,7 +108,6 @@ INSTALLED_APPS = [
     'drf_api_logger',
     'django_filters',
     'channels',
-
 ]
 
 MIDDLEWARE = [
@@ -91,6 +132,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+
 
 TEMPLATES = [
     {
@@ -162,11 +205,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
+TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
+
+# USE_I18N = True
+
+# USE_TZ = True
+
+# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -209,7 +255,7 @@ EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
 EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=2),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
@@ -218,6 +264,10 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Or RabbitMQ
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -229,6 +279,10 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
+CRONJOBS = [
+    ('*/1 * * * *', 'Uber.cron.print_hello')
+]
 
 # EMAIL_BACKEND = config('EMAIL_BACKEND')
 # EMAIL_HOST = config('EMAIL_HOST')
