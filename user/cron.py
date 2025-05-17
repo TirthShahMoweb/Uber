@@ -22,11 +22,12 @@ def check_availblity_of_driver():
     from user.models import DriverDetail
     from django.utils import timezone
     drivers = DriverDetail.objects.filter(~Q(in_use=None))
-    ten_minutes_ago = (timezone.now() - timedelta(minutes=10)).time()
+    ten_minutes_ago = timezone.now() - timedelta(minutes=10)
     updated_count = 0
     for driver in drivers:
         if driver.last_online_at < ten_minutes_ago:
             driver.is_online = False
             driver.save()
+            updated_count += 1
 
     cron_logger.info(f"{updated_count} driver(s) marked offline.")

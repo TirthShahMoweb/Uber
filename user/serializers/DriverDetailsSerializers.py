@@ -60,7 +60,6 @@ class VerificationRequestSerializer(serializers.ModelSerializer):
 
                 field_value = data[field_name]
                 if doc_type.field_type == "image":
-                    print("field_value", field_value, type(field_value), type(field_value),field_name)
                     if type(field_value) is str:
                         raise CustomValidationError({f"{field_name}":f"{doc_type.document_label} must Required and it should be an image."})
                     if field_value.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:

@@ -115,13 +115,13 @@ class TripDetails(CreateAPIView):
 
         for fare in fares:
             if current_time_only >= fare.night_time_starting or current_time_only < fare.night_time_ending:
-                total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare + fare.night_time_fare ) * distance
+                total_fare[fare.vehicle_type] = round(base_fair + (fare.normal_fare + fare.night_time_fare) * distance, 2)
 
             elif fare.peak_time_morning_starting <= current_time_only <= fare.peak_time_morning_ending or fare.peak_time_evening_starting <= current_time_only <= fare.peak_time_evening_starting:
-                total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare + fare.peak_time_fare ) * distance
+                total_fare[fare.vehicle_type] = round(base_fair + (fare.normal_fare + fare.peak_time_fare ) * distance, 2)
 
             else:
-                total_fare[fare.vehicle_type] = base_fair + (fare.normal_fare * distance)
+                total_fare[fare.vehicle_type] = round(base_fair + (fare.normal_fare * distance), 2)
 
         data  = {"distance": f"{distance} km",
                     'durations': (current_time_ist + timedelta(minutes=math.ceil(durations))).strftime("%I:%M %p"),
@@ -169,7 +169,6 @@ class AddTripDetails(CreateAPIView):
                     {
                         'type': 'send_trip_update',
                         'message': {
-                            'status': '',
                             'status': 'success',
                             'message': 'New trip available',
                             'event': 'send_trip_update',
@@ -217,7 +216,6 @@ class TripCancelView(UpdateAPIView):
                 {
                     'type': 'remove_trip_update',
                     'message': {
-                        'status': '',
                         'status': 'success',
                         'message': 'Trip removed ID',
                         'event': 'remove_trip_update',

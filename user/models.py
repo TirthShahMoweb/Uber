@@ -183,3 +183,9 @@ class TripFare(BaseModel):
     peak_time_morning_ending = models.TimeField()
     peak_time_evening_starting = models.TimeField()
     peak_time_evening_ending = models.TimeField()
+
+
+class TripLocation(BaseModel):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="locations")
+    latitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)

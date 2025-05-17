@@ -172,7 +172,6 @@ class DriverVehiclesListView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         driver = get_object_or_404(DriverDetail, user=user)
-        print("Hello WOrld----------------------===", driver , driver.in_use)
         vehicle_id = driver.in_use.id if driver.in_use else driver.in_use
         in_use_vehicle = get_object_or_404(Vehicle, id=vehicle_id)
 
@@ -216,7 +215,6 @@ class DriverVehiclesListView(ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        print(queryset,"1234323432345432345434-----------------------")
         document_serializer = self.get_serializer(queryset, many=True)
         # print(document_serializer.data)
         for i in document_serializer.data:
