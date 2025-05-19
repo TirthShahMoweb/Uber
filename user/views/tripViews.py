@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -14,10 +15,11 @@ from datetime import timedelta
 import math
 import pytz
 
-from ..models import DriverRequest, DriverDetail, User, TripFare, Trip
-from ..serializers.tripSerializers import TripSerializer, TripCancelSerializer, TripApprovalSerializer
+from utils.mixins import DynamicPermission
+from ..models import DriverRequest, DriverDetail, User, TripFare, Trip, Payment
+from ..serializers.tripSerializers import TripSerializer, FeedbackRatingSerializer, PaymentListSerializer, TripCancelSerializer, VerifiedDriverAtPickUpLocationSerializer, TripApprovalSerializer
 from utils.helper import calculate_road_distance_and_time
-from Uber.settings import open_route_service_key
+from Uber.settings import open_route_service_key, COMMISSION_PERCENTAGE
 
 
 
@@ -196,7 +198,7 @@ class TripCancelView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.save()
         data = {"cancelled_by": validated_data.cancelled_by,
-                "description": validated_data.description,
+                "description": validated_data.cancelation_description,
                 "customer_name": f"{validated_data.customer.first_name} {validated_data.customer.last_name}"}
 
         if validated_data.cancelled_by == "driver":
@@ -264,3 +266,88 @@ class TripApprovalView(UpdateAPIView):
                 }
             )
         return Response({"status": "success", "message": "Successfully trip got accepted", "data": data}, status=status.HTTP_200_OK)
+
+
+class ReachedPickUpLocationView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'), driver =self.request.user)
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip =self.get_object()
+        trip.status = "Reached"
+        trip.save()
+        return Response({"status": "success", "message": "Driver Successfully Reached."}, status=status.HTTP_200_OK)
+
+
+class VerifiedDriverAtPickUpLocationView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = VerifiedDriverAtPickUpLocationSerializer
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'), driver =self.request.user)
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip = self.get_object()
+        serializer = self.get_serializer(data=request.data, context={"user":request.user, "trip": trip})
+        serializer.is_valid(raise_exception=True)
+        trip.status = 'On Going'
+        trip.pickup_time = timezone.now()
+        trip.save()
+        return Response({"status": "success", "message": "Driver Successfully verified."}, status=status.HTTP_200_OK)
+
+
+class TripCompletedView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'), driver =self.request.user)
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip = self.get_object()
+        trip.status = 'Completed'
+        trip.drop_time = timezone.now()
+        Payment.objects.create(trip=trip, amount= trip.fare%COMMISSION_PERCENTAGE)
+        trip.save()
+        return Response({"status": "success", "message": "Trip Successfully completed."}, status=status.HTTP_200_OK)
+
+
+class FeedbackRatingView(UpdateAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = FeedbackRatingSerializer
+
+    def get_object(self):
+        trip = get_object_or_404(Trip, id = self.kwargs.get('id'))
+        return trip
+
+    def update(self, request, *args, **kwargs):
+        trip = self.get_object()
+        serializer = self.get_serializer(trip, data=request.data, context={"user":request.user, "trip": trip}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"status": "success", "message": "Feedaback and Rating recived Successfully."}, status=status.HTTP_200_OK)
+
+
+class PaymentListView(ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    # def get_permissions(self):
+        # return [IsAuthenticated(), DynamicPermission('')]
+    permission_classes = [IsAuthenticated]
+    serializer_class = PaymentListSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['trip__driver__first_name', 'trip__driver__last_name']
+
+    ordering_fields = ['created_at', 'status']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = Payment.objects.select_related('trip')
+        return queryset

@@ -3,7 +3,8 @@ from rest_framework.exceptions import APIException
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
-from ..models import Trip, User, DriverDetail
+from ..models import Trip, User, DriverDetail, Payment
+import random
 
 
 
@@ -62,7 +63,7 @@ class TripCancelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trip
-        fields = ('description', 'cancel_by')
+        fields = ('cancelation_description', 'cancel_by')
 
     def validate(self, attrs):
         if self.context.get('user').user_type == 'admin':
@@ -83,7 +84,7 @@ class TripCancelSerializer(serializers.ModelSerializer):
     def update(self, instance, attrs):
         user = self.context.get('user')
         instance.status = 'cancelled'
-        instance.description = attrs['description']
+        instance.cancelation_description = attrs['cancelation_description']
         if attrs.get('cancel_by'):
             instance.cancelled_by = 'auto'
         else:
@@ -113,5 +114,70 @@ class TripApprovalSerializer(serializers.Serializer):
         instance.driver = user
         instance.vehicle_id = driver.in_use
         instance.status = "Accepted"
+        instance.otp = random.randint(1000, 9999)
         instance.save()
         return instance
+
+
+class VerifiedDriverAtPickUpLocationSerializer(serializers.Serializer):
+    otp = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        otp = attrs.get('otp')
+        trip = self.context.get("trip")
+
+        if not otp.isdigit():
+            errors = {"otp": "OTP must contain only numeric characters."}
+            raise CustomValidationError(errors)
+
+        if len(otp) != 4:
+            errors = {"otp": "OTP must be exactly 4 digits long."}
+            raise CustomValidationError(errors)
+
+        otp = int(otp)
+
+        if trip.otp != otp:
+            errors = {"otp":  "Invalid OTP."}
+            raise CustomValidationError(errors)
+        return attrs
+
+
+class FeedbackRatingSerializer(serializers.Serializer):
+    feedback = serializers.CharField(required=True)
+    rating = serializers.IntegerField(required=True)
+
+    def validate(self, attrs):
+        user = self.context.get('user')
+        trip = self.context.get('trip')
+        print(type(attrs.get('rating')))
+        if 0 >= attrs.get('rating') or  attrs.get('rating') >= 6 :
+            errors = {"rating":  "Should be between 1 to 5."}
+            raise CustomValidationError(errors)
+
+        if user != trip.customer and user != trip.driver:
+            errors = {"user": "User is not the customer or driver of this trip."}
+            raise CustomValidationError(errors)
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        user = self.context.get('user')
+        if user == instance.customer:
+            instance.customer_feedback = validated_data.get('feedback')
+            instance.customer_rating = validated_data.get('rating')
+
+        elif user == instance.driver:
+            instance.driver_feedback = validated_data.get('feedback')
+            instance.driver_rating = validated_data.get('rating')
+
+        instance.save()
+        return validated_data
+
+
+class PaymentListSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source = 'trip.driver.first_name')
+    last_name = serializers.CharField(source = 'trip.driver.last_name')
+
+    class Meta:
+        model = Payment
+        fields = ('id', 'first_name', 'last_name', 'amount', 'status')

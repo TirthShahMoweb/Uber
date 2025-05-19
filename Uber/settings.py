@@ -223,6 +223,7 @@ MEDIA_URL = '/media/'
 
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+COMMISSION_PERCENTAGE = 20
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -255,7 +256,7 @@ EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
 EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 

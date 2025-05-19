@@ -20,7 +20,7 @@ def calculate_road_distance_and_time(start_lat, start_lon, end_lat, end_lon, api
     )
 
     data = response.json()
-
+    print(data['routes'])
     distance_in_meters = data['routes'][0]['summary']['distance']
     duration_in_seconds = data['routes'][0]['summary']['duration']
 

@@ -41,10 +41,12 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         event_type = data.get("type")
+        location = data.get("location")
 
         if event_type == "receive_location_update":
-            # {"type": "receive_location_update", "status":"success", "data" : {"trip_id": 232, "lat": '23.055770872666034', "long": '72.54309146797485'}}
+            # {"type": "receive_location_update", "location":"pickup_location", "status":"success", "data" : {"trip_id": 232, "lat": '23.055770872666034', "long": '72.54309146797485'}}
             payload = data.get("data", {})
+            print(data,"=-=-=-=-=-==-=-=-=-=-=-=-=-=-==-=-=--=Data GHONSHYOM RAVOL")
             trip_id = payload.get("trip_id")
             latitude = payload.get("lat")
             longitude = payload.get("long")
@@ -61,32 +63,29 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
 
             from utils.helper import calculate_road_distance_and_time
             from Uber.settings import open_route_service_key
-            import math
+            import math, pytz
             from django.utils import timezone
             from datetime import timedelta
 
-
-            distance, durations = calculate_road_distance_and_time(trip.pickup_location_latitude, trip.pickup_location_longitude, latitude, longitude, open_route_service_key)
+            india_timezone = pytz.timezone('Asia/Kolkata')
+            current_time_utc = timezone.now()
+            current_time_ist = current_time_utc.astimezone(india_timezone)
+            distance, durations = 0, 0
+            if location == "pickup_location":
+                print("Hello World, ==-=--=-==--=-==--==-=-")
+                distance, durations = calculate_road_distance_and_time(trip.pickup_location_latitude, trip.pickup_location_longitude, latitude, longitude, open_route_service_key)
+            elif location == "drop_location":
+                distance, durations = calculate_road_distance_and_time(latitude, longitude, trip.drop_location_latitude, trip.drop_location_longitude, open_route_service_key)
+            print(durations)
             distance = float(distance)
-            data  = {"distance": f"{distance} km",
-                    'durations': (timezone.now() + timedelta(minutes=math.ceil(durations))).strftime("%I:%M %p"),
-                    'estimated_time': f'{math.ceil(durations)} mins',
-                    'pickup_location': trip.pickup_location,
+            data  = {'pickup_location': trip.pickup_location,
                     'drop_location': trip.drop_location,
-                    'total_fare':float(trip.fare)}
+                    "distance": f"{distance} km",
+                    'total_fare': float(trip.fare),
+                    'estimated_time': f'{math.ceil(durations)} mins',
+                    'durations': (current_time_ist + timedelta(minutes=math.ceil(durations))).strftime("%I:%M %p")}
 
-            await self.channel_layer.group_send(
-                f"driver_{customer_id}",
-                {
-                    "type": "location_update",
-                    "message": {
-                        'status': 'success',
-                        'message': 'Location Updated Successfully',
-                        'event': 'location_update',
-                        'data': data
-                    }
-                }
-            )
+            # Driver data
             await self.channel_layer.group_send(
                 f"driver_{driver_id}",
                 {
@@ -100,6 +99,23 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+            data['otp']= trip.otp
+            data['driver_name']= f"{trip.driver.first_name} {trip.driver.last_name}"
+            data['image']= f"{trip.driver.thumbnail_pic}"
+
+            # Customer Data
+            await self.channel_layer.group_send(
+                f"driver_{customer_id}",
+                {
+                    "type": "location_update",
+                    "message": {
+                        'status': 'success',
+                        'message': 'Location Updated Successfully',
+                        'event': 'location_update',
+                        'data': data
+                    }
+                }
+            )
 
     async def send_trip_update(self, event):
         await self.send(text_data=json.dumps(event["message"]))

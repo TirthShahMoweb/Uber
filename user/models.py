@@ -138,6 +138,7 @@ class CancelByStatus(models.TextChoices):
 class TripStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
     ACCEPTED = 'accepted', 'Accepted'
+    REACHED = 'reached', 'Reached'
     ON_GOING = 'on_going', 'On Going'
     COMPLETED = 'completed', 'Completed'
     CANCELLED = 'cancelled', 'Cancelled'
@@ -163,11 +164,15 @@ class Trip(BaseModel):
     pickup_location_latitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
     pickup_location_longitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
     distance = models.DecimalField(max_digits=10, decimal_places=2)
+    otp = models.PositiveIntegerField(null=True, blank=True, validators=[MinValueValidator(1000), MaxValueValidator(9999)])
     estimated_time = models.DecimalField(max_digits=10, decimal_places=2)
     fare = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=TripStatus, default='pending')
-    description = models.TextField(null=True, blank=True)
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
+    cancelation_description = models.TextField(null=True, blank=True)
+    customer_feedback = models.TextField(null=True, blank=True)
+    customer_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
+    driver_feedback = models.TextField(null=True, blank=True)
+    driver_rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
     cancelled_by = models.CharField(max_length=20, choices=CancelByStatus, null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
@@ -189,3 +194,14 @@ class TripLocation(BaseModel):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="locations")
     latitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
     longitude = models.DecimalField(max_digits=19, decimal_places=16, null=True, blank=True)
+
+
+class PaymentStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    ACCEPTED = 'accepted', 'Accepted'
+
+
+class Payment(BaseModel):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_payment")
+    status = models.CharField(max_length=20, choices=PaymentStatus, default='pending')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)

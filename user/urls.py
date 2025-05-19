@@ -57,7 +57,10 @@ urlpatterns = [
     path('addTripDetails', tripViews.AddTripDetails.as_view(), name='add_trip'),
     path('tripCancelView/<int:id>', tripViews.TripCancelView.as_view()),
     path("tripApprovalView/<int:id>", tripViews.TripApprovalView.as_view()),
-
+    path("reachedPickUpLocationView/<int:id>", tripViews.ReachedPickUpLocationView.as_view()),
+    path("verifiedDriverAtPickUpLocationView/<int:id>", tripViews.VerifiedDriverAtPickUpLocationView.as_view()),
+    path("tripCompletedView/<int:id>", tripViews.TripCompletedView.as_view()),
+    path("feedbackRatingView/<int:id>", tripViews.FeedbackRatingView.as_view()),
 
     # # Vehicle Details
     # path('addVehicle/', VehicleViews.addVehicleView.as_view()),
