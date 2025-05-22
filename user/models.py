@@ -151,8 +151,8 @@ class WheelerChoices(models.TextChoices):
 
 
 class Trip(BaseModel):
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="customer")
-    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver", null=True, blank=True)
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="customer_trip")
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="driver_trip", null=True, blank=True)
     vehicle_id = models.ForeignKey('vehicle.Vehicle', on_delete=models.SET_NULL, null=True, blank=True)
     vehicle_type = models.CharField(max_length=10, choices=WheelerChoices, null=True, blank=True)
     pickup_location = models.CharField(max_length=255)

@@ -81,11 +81,11 @@ class TripCancelSerializer(serializers.ModelSerializer):
                 raise CustomValidationError(errors)
         return attrs
 
-    def update(self, instance, attrs):
+    def update(self, instance, validated_data):
         user = self.context.get('user')
         instance.status = 'cancelled'
-        instance.cancelation_description = attrs['cancelation_description']
-        if attrs.get('cancel_by'):
+        instance.cancelation_description = validated_data['cancelation_description']
+        if validated_data.get('cancel_by'):
             instance.cancelled_by = 'auto'
         else:
             instance.cancelled_by = 'customer' if user.user_type == "customer" else "driver"
@@ -180,4 +180,26 @@ class PaymentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ('id', 'first_name', 'last_name', 'amount', 'status')
+        fields = ('id', 'trip_id', 'first_name', 'last_name', 'amount', 'status')
+
+
+from django.conf import settings
+
+class DriverPersonalInfoSerializer(serializers.ModelSerializer):
+    thumbnail_pic = serializers.ImageField(allow_null=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'thumbnail_pic', 'mobile_number')
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Extract full request context
+        request_context = self.context.get("server")
+
+        base_url = f"{"http"}://{request_context[0]}:{request_context[1]}"  # Construct base URL
+
+        if instance.thumbnail_pic:
+            representation["thumbnail_pic"] = f"{base_url}{instance.thumbnail_pic.url}"
+
+        return representation

@@ -314,7 +314,13 @@ class TripCompletedView(UpdateAPIView):
         trip = self.get_object()
         trip.status = 'Completed'
         trip.drop_time = timezone.now()
-        Payment.objects.create(trip=trip, amount= trip.fare%COMMISSION_PERCENTAGE)
+        print(trip.driver.id)
+        print(round(trip.fare*COMMISSION_PERCENTAGE, 2))
+        driver = get_object_or_404(DriverDetail, user = trip.driver.id)
+        driver.amount_remaining = round(trip.fare*COMMISSION_PERCENTAGE, 2)
+        driver.amount_received = round(trip.fare * (1 - COMMISSION_PERCENTAGE), 2)
+        driver.save()
+        Payment.objects.create(trip=trip, amount= round(trip.fare*COMMISSION_PERCENTAGE, 2))
         trip.save()
         return Response({"status": "success", "message": "Trip Successfully completed."}, status=status.HTTP_200_OK)
 
@@ -351,3 +357,16 @@ class PaymentListView(ListAPIView):
     def get_queryset(self):
         queryset = Payment.objects.select_related('trip')
         return queryset
+
+
+
+# User.objects.filter(user_type='driver').annotate(
+#     avg_driver_rating=Avg('driver_trips__driver_rating')
+# )
+
+
+# User.objects.filter(user_type='customer').annotate(
+#     avg_driver_rating=Avg('customer_trip__driver_rating')
+# )
+
+

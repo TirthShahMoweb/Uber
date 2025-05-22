@@ -51,6 +51,7 @@ urlpatterns = [
     path('userCountView', driverDetailsViews.UserCountView.as_view()),
     path('updateDriverLastOnlineAtView', userViews.UpdateDriverLastOnlineAtView.as_view()),
     # path('driverTripPendingView', driverDetailsViews.DriverTripPendingView.as_view(), name='driver_trip_pending'),
+    path('tripHistoryView', userViews.TripHistoryView.as_view()),
 
     # Trip Details
     path('tripDetails', tripViews.TripDetails.as_view()),
@@ -61,6 +62,7 @@ urlpatterns = [
     path("verifiedDriverAtPickUpLocationView/<int:id>", tripViews.VerifiedDriverAtPickUpLocationView.as_view()),
     path("tripCompletedView/<int:id>", tripViews.TripCompletedView.as_view()),
     path("feedbackRatingView/<int:id>", tripViews.FeedbackRatingView.as_view()),
+    path('paymentListView', tripViews.PaymentListView.as_view()),
 
     # # Vehicle Details
     # path('addVehicle/', VehicleViews.addVehicleView.as_view()),

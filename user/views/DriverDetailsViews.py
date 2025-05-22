@@ -7,15 +7,16 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
-from django.db.models import F, Value
+from django.db.models import F, Value, Sum, Q
 from django.db.models.functions import Concat
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 
+
 from utils.mixins import DynamicPermission
-from ..models import DriverDetail, DocumentType, User, DriverRequest, Role, Trip
+from ..models import DriverDetail, DocumentType, User, DriverRequest, Payment, Role, Trip
 from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ImpersonationSerializer
 
 
@@ -142,14 +143,23 @@ class UserCountView(ListAPIView):
         customer_count = User.objects.filter(user_type='customer').count()
         driver_count = DriverDetail.objects.all().count()
         pending_driver_request_count = DriverRequest.objects.filter(status='pending').count()
+        # draft_driver_request_count = DriverRequest.objects.filter(~Q(status= "Approved")).distinct().count()
         driverRequest = DriverRequest.objects.values_list('user_id', flat=True)
+        print(driverRequest,"-=-=--==-=-=-=-=-")
         draft_driver_request_count = User.objects.filter(user_type='driver').exclude(id__in=driverRequest).count()
+        total_successfull_trip = Trip.objects.filter(status = "Completed").count()
+        total_number_payment_pending = Payment.objects.filter(status = "pending").count()
+        total_amount_pending = Payment.objects.filter(status = "pending").aggregate(amount = Sum('amount'))
+        print(total_amount_pending['amount'])
 
         data = {
             "customer_count": customer_count,
             "driver_count": driver_count,
             "pending_driver_request_count": pending_driver_request_count,
-            "draft_driver_request_count": draft_driver_request_count
+            "draft_driver_request_count": draft_driver_request_count,
+            "total_successfull_trip": total_successfull_trip,
+            "total_number_payment_pending": total_number_payment_pending,
+            "total_amount_pending": total_amount_pending['amount']
         }
 
         return Response({

@@ -184,46 +184,17 @@ class DriverVehiclesListView(ListAPIView):
             selected=Case(When(id=in_use_vehicle.id, then=True), default=False, output_field=BooleanField()),
             document_type_id=Subquery(vehicle_front_image_subquery)
         )
-        # for i in vehicles:
-        #     print("id : ", i.id,
-        #             ",vehicle_number:", i.vehicle_number,
-        #             ",vehicle_type:", i.vehicle_type,
-        #             ",selected:", i.selected,
-        #             ",vehicle_front_image:", i.image)
         return vehicles
-
-    # def list(self, request, *args, **kwargs):
-    #     queryset = self.get_queryset()
-    #     # for i in queryset:
-    #     #     print(i.image)
-    #     document_serializer = self.get_serializer(queryset, many=True)
-    #     x = VehicleFrontImageSerializer(data = document_serializer.data, many=True)
-    #     x.is_valid(raise_exception=True)
-    #     # print(x.data, "PRINT SOMETTHING CRAZY")
-    #     data = {"data":document_serializer.data}
-    #     # print(document_serializer.data)
-    #     # for i in document_serializer.data:
-    #     #     x = i["image"]
-    #     #     c = DocumentType.objects.get(id=x)
-    #     #     print(c.document_image)
-    #     return Response({
-    #         "status": "success",
-    #         "message": "Document types fetched successfully",
-    #         "data": data
-    #     }, status=status.HTTP_200_OK)
 
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         document_serializer = self.get_serializer(queryset, many=True)
-        # print(document_serializer.data)
         for i in document_serializer.data:
             document_type_obj = DocumentType.objects.filter(id = i['document_type_id'])
             document_type_serializer = VehicleFrontImageSerializer(document_type_obj, many=True, context={'request': request})
-            # import pdb
-            # pdb.set_trace()
             i['vehicle_front_image'] = document_type_serializer.data[0]['document_image']
-            # print(document_type_serializer.data[0]['document_image'], "qwerty")
+
         data = {"data":document_serializer.data}
         return Response({
             "status": "success",

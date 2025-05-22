@@ -1,5 +1,6 @@
 amqp==5.3.1
 anyio==4.9.0
+APScheduler==3.11.0
 asgiref==3.8.1
 attrs==25.3.0
 autobahn==24.4.2
@@ -21,8 +22,8 @@ cron-descriptor==1.4.5
 cryptography==44.0.3
 daphne==4.1.2
 Django==5.1.7
-django-celery-beat==2.7.0
 django-cors-headers==4.7.0
+django-crontab==0.7.1
 django-filter==25.1
 django-timezone-field==7.1
 djangorestframework==3.15.2
@@ -47,7 +48,6 @@ pyasn1_modules==0.4.2
 pycparser==2.22
 PyJWT==2.9.0
 pyOpenSSL==25.0.0
-python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
 python-dotenv==1.1.0
@@ -66,6 +66,7 @@ Twisted==24.11.0
 txaio==23.1.1
 typing_extensions==4.13.2
 tzdata==2025.2
+tzlocal==5.3.1
 uritemplate==4.1.1
 urllib3==2.3.0
 uvicorn==0.34.2

@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
-from ..models import User, DriverRequest
+from ..models import User, DriverRequest, Trip
 
 import secrets, random
 
@@ -334,3 +334,12 @@ class UpdateTeamMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'mobile_number', 'email', 'gender', 'role_name', 'role',)
+
+
+class TripHistorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = ('pickup_location', 'drop_location', 'status' , 'pickup_time', 'drop_time', 'distance', 'fare', 'name')
+

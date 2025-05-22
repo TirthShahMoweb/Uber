@@ -12,8 +12,8 @@ from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from utils.mixins import DynamicPermission
-from ..models import User, Role, Permission, RolePermission, DriverDetail
-from ..serializers.userSerializers import AdminRightsSerializer, ResendOtpSerializer, UpdateTeamMemberSerializer, ListTeamMemberSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
+from ..models import User, Role, Permission, RolePermission, DriverDetail, Trip
+from ..serializers.userSerializers import AdminRightsSerializer, TripHistorySerializer, ResendOtpSerializer, UpdateTeamMemberSerializer, ListTeamMemberSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
 from Uber import settings
 
 from django.core.mail import send_mail
@@ -349,7 +349,7 @@ class ForgotPasswordView(CreateAPIView):
                 "email": user.email,
                 "link": link
                 }
-            return Response({"status": "success", "message": "Reset password link sent to your email. If Register.","data" : data },status=status.HTTP_200_OK)
+            return Response({"status": "success", "message": "Reset password link sent to your email. If Register.","data" : data }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -501,3 +501,15 @@ class UpdateDriverLastOnlineAtView(UpdateAPIView):
         driver.last_online_at = timezone.now()
         driver.save()
         return Response({"status": "success", "message": "Driver updated successfully"}, status=status.HTTP_200_OK)
+
+
+class TripHistoryView(ListAPIView):
+
+
+    authentication_classes=[JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class= TripHistorySerializer
+
+    def get_queryset(self):
+        queryset = Trip.objects.filter(customer=self.request.user).annotate(name=Concat(F('driver__first_name'), Value(' '), F('driver__last_name'), output_field=CharField()))
+        return queryset

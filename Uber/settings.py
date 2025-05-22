@@ -15,6 +15,7 @@ import os
 from datetime import timedelta
 from decouple import config
 import logging
+from decimal import Decimal
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,6 +28,8 @@ logger = logging.getLogger(__name__)  # Create a logger object
 
 CRON_LOG_FILENAME = os.path.join(BASE_DIR, 'log/cron.log')
 ERROR_LOG_FILENAME = os.path.join(BASE_DIR, 'log/error.log')
+
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")  # Uses env variable if available
 
 LOGGING = {
     "version": 1,
@@ -223,7 +226,7 @@ MEDIA_URL = '/media/'
 
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
-COMMISSION_PERCENTAGE = 20
+COMMISSION_PERCENTAGE = Decimal(0.2)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -248,6 +251,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -255,8 +259,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
 EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
 
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
