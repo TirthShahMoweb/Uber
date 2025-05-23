@@ -137,6 +137,9 @@ class TripDetails(CreateAPIView):
 
 
 class AddTripDetails(CreateAPIView):
+    '''
+        Add Trip Details
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TripSerializer
@@ -185,6 +188,9 @@ class AddTripDetails(CreateAPIView):
 
 
 class TripCancelView(UpdateAPIView):
+    '''
+        Trip Cancel
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TripCancelSerializer
@@ -230,6 +236,9 @@ class TripCancelView(UpdateAPIView):
 
 
 class TripApprovalView(UpdateAPIView):
+    '''
+        Trip Approval
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TripApprovalSerializer
@@ -270,6 +279,9 @@ class TripApprovalView(UpdateAPIView):
 
 
 class ReachedPickUpLocationView(UpdateAPIView):
+    '''
+        Reached at pickup location
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -285,6 +297,9 @@ class ReachedPickUpLocationView(UpdateAPIView):
 
 
 class VerifiedDriverAtPickUpLocationView(UpdateAPIView):
+    '''
+        Verified Driver at pickup location
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = VerifiedDriverAtPickUpLocationSerializer
@@ -304,6 +319,9 @@ class VerifiedDriverAtPickUpLocationView(UpdateAPIView):
 
 
 class TripCompletedView(UpdateAPIView):
+    '''
+        Trip Completed
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -327,6 +345,9 @@ class TripCompletedView(UpdateAPIView):
 
 
 class FeedbackRatingView(UpdateAPIView):
+    '''
+        Feedback Rating
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = FeedbackRatingSerializer
@@ -344,6 +365,9 @@ class FeedbackRatingView(UpdateAPIView):
 
 
 class PaymentListView(ListAPIView):
+    '''
+        Payment List
+    '''
     authentication_classes = [JWTAuthentication]
     # def get_permissions(self):
         # return [IsAuthenticated(), DynamicPermission('')]

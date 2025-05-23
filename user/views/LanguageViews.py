@@ -6,7 +6,9 @@ from ..serializers.languageSerializers import LanguageListSerializer
 
 
 class LanguageListView(ListAPIView):
-
+    '''
+        Language List
+    '''
     serializer_class = LanguageListSerializer
     queryset = Language.objects.all()
 

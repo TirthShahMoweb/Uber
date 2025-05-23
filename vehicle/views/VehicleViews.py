@@ -81,6 +81,9 @@ class AdminVehicleStatusListView(ListAPIView):
 
 
 class DriverVehicleDetailsView(RetrieveAPIView):
+    '''
+        Driver Vehicle Details
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('vehicle_view')]
@@ -140,7 +143,9 @@ class AdminVehicleApprovalView(UpdateAPIView):
 
 
 class VehicleListView(ListAPIView):
-
+    '''
+        Driver Vehicle List
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('vehicle_view')]
@@ -156,7 +161,9 @@ class VehicleListView(ListAPIView):
 
 
 class DraftVehicleListView(ListAPIView):
-
+    '''
+        Draft Vehicle List View
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('vehicle_view')]

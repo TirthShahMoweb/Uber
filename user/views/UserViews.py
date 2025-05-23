@@ -192,6 +192,9 @@ class MobileNumberView(CreateAPIView):
 
 
 class ResendOtpView(UpdateAPIView):
+    '''
+        Resend OTP
+    '''
     serializer_class = ResendOtpSerializer
     queryset = User.objects.all()
 
@@ -294,7 +297,9 @@ class SignupView(CreateAPIView):
 
 
 class ChangePasswordView(UpdateAPIView):
-
+    '''
+        Change Password
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -343,6 +348,9 @@ class ProfileView(RetrieveAPIView):
 
 
 class ForgotPasswordView(CreateAPIView):
+    '''
+        Forgot Password
+    '''
     serializer_class = ForgotPasswordSerializer
 
     def create(self, request, *args, **kwargs):
@@ -403,7 +411,9 @@ class ResetPasswordView(UpdateAPIView):
 
 
 class AddTeamMemberView(CreateAPIView):
-
+    '''
+        Add Team Member
+    '''
     serializer_class = AddTeamMemberSerializer
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
@@ -504,7 +514,9 @@ class DestroyTeamMemberView(DestroyAPIView):
 
 
 class UpdateDriverLastOnlineAtView(UpdateAPIView):
-
+    '''
+        Update Driver Last Online at
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -518,9 +530,11 @@ class UpdateDriverLastOnlineAtView(UpdateAPIView):
         driver.save()
         return Response({"status": "success", "message": "Driver updated successfully"}, status=status.HTTP_200_OK)
 
-
+# TODO: Covert it into constomer Trip VIew
 class TripHistoryView(ListAPIView):
-
+    '''
+        Trip History
+    '''
 
     authentication_classes=[JWTAuthentication]
     permission_classes = [IsAuthenticated]

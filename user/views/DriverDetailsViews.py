@@ -1,7 +1,4 @@
-from django.db.models import F, Q, Sum, Value
-from django.db.models.functions import Concat
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from django.db.models import Sum
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -79,6 +76,9 @@ class DriverDetailsView(ListCreateAPIView):
 
 
 class DriverListView(ListAPIView):
+    '''
+        Driver List
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_view')]
@@ -112,6 +112,9 @@ class DriverListView(ListAPIView):
 
 
 class AdminDriverStatusListView(ListAPIView):
+    '''
+        Admin Driver Status List
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_view')]
@@ -141,6 +144,9 @@ class AdminDriverStatusListView(ListAPIView):
 
 
 class UserCountView(ListAPIView):
+    '''
+        User Count
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -175,6 +181,9 @@ class UserCountView(ListAPIView):
 
 
 class DriverPersonalDetailsView(RetrieveAPIView):
+    '''
+        Driver Personal Details 
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_view')]
@@ -190,6 +199,9 @@ class DriverPersonalDetailsView(RetrieveAPIView):
 
 
 class DriverDraftView(ListAPIView):
+    '''
+        Draft Driver
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_view')]
@@ -202,6 +214,9 @@ class DriverDraftView(ListAPIView):
 
 
 class AdminDriverApprovalView(UpdateAPIView):
+    '''
+        Admin Driver Approval
+    '''
     authentication_classes = [JWTAuthentication]
     def get_permissions(self):
         return [IsAuthenticated(), DynamicPermission('user_edit')]
@@ -247,6 +262,9 @@ class AdminDriverApprovalView(UpdateAPIView):
 
 
 class ImpersonationView(CreateAPIView):
+    '''
+        Impersonation
+    '''
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated, ImpersonationPermission]
 
