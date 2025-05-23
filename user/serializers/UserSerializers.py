@@ -1,13 +1,13 @@
-from django.contrib.auth.hashers import check_password
-from django.utils.timezone import timedelta
-from django.utils import timezone
+import random
+import secrets
 
+from django.contrib.auth.hashers import check_password
+from django.utils import timezone
+from django.utils.timezone import timedelta
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
-from ..models import User, DriverRequest, Trip
 
-import secrets, random
-
+from ..models import DriverRequest, Trip, User
 
 
 class CustomValidationError(APIException):

@@ -1,9 +1,12 @@
-from django.db.models.signals import pre_save, post_save
+import os
+
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from user.models import User
 from django.utils import timezone
 from PIL import Image
-import os
+
+from user.models import User
+
 
 @receiver(pre_save, sender=User)
 def updated_at_pre_save(sender,instance, **kwargs):

@@ -1,7 +1,9 @@
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (CreateAPIView, ListAPIView,
+                                     RetrieveUpdateDestroyAPIView)
 
 from ..models import Role
-from ..serializers.rolesSerializers import roleSerializer, roleListSerializer
+from ..serializers.rolesSerializers import roleListSerializer, roleSerializer
+
 
 class CreateRoles(CreateAPIView):
     '''

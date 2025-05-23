@@ -3,6 +3,7 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 from ..models import Permission
 from ..serializers.permissionSerializers import permissionsSerializer
 
+
 class CreatePermission(CreateAPIView):
     '''
         create Permission

@@ -1,8 +1,10 @@
-from django.utils import timezone
-from datetime import datetime
-from django.utils.timezone import timedelta
-from django.db.models import Q
 import logging
+from datetime import datetime
+
+from django.db.models import Q
+from django.utils import timezone
+from django.utils.timezone import timedelta
+
 cron_logger = logging.getLogger('cron_logger')
 
 
@@ -19,8 +21,9 @@ def delete_api_log():
 
 def check_availblity_of_driver():
 
-    from user.models import DriverDetail
     from django.utils import timezone
+
+    from user.models import DriverDetail
     drivers = DriverDetail.objects.filter(~Q(in_use=None))
     ten_minutes_ago = timezone.now() - timedelta(minutes=10)
     updated_count = 0

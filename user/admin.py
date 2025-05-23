@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import User , Language, DriverRequest, Trip, TripFare, DocumentType, DocumentRequired ,DriverDetail, Role, Permission, RolePermission
 
-
+from .models import (DocumentRequired, DocumentType, DriverDetail,
+                     DriverRequest, Language, Permission, Role, RolePermission,
+                     Trip, TripFare, User)
 
 # Register your models here.
 admin.site.register(User)

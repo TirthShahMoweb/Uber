@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from ..models import DriverDetail, DocumentRequired, User, DocumentType, DriverRequest, Trip
-
+from ..models import (DocumentRequired, DocumentType, DriverDetail,
+                      DriverRequest, Trip, User)
 
 
 class CustomValidationError(APIException):

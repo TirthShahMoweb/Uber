@@ -1,11 +1,12 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class TripUpdateConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         from rest_framework_simplejwt.tokens import AccessToken
+
         from user.models import User
 
         query_string = self.scope['query_string'].decode()  # Decode the query string
@@ -50,9 +51,12 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
             longitude = payload.get("long")
 
 
-            from user.models import Trip, TripLocation
             from asgiref.sync import sync_to_async
-            from .serializers.tripSerializers import DriverPersonalInfoSerializer
+
+            from user.models import Trip, TripLocation
+
+            from .serializers.tripSerializers import \
+                DriverPersonalInfoSerializer
             trip = await Trip.objects.select_related("customer", "driver").aget(id=trip_id)
             await sync_to_async(TripLocation.objects.create)(
                 trip_id=trip_id, latitude=latitude, longitude=longitude
@@ -60,11 +64,14 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
             customer_id = trip.customer.id
             driver_id = trip.driver.id
 
-            from utils.helper import calculate_road_distance_and_time
-            from Uber.settings import open_route_service_key
-            import math, pytz
-            from django.utils import timezone
+            import math
             from datetime import timedelta
+
+            import pytz
+            from django.utils import timezone
+
+            from Uber.settings import open_route_service_key
+            from utils.helper import calculate_road_distance_and_time
             from vehicle.models import Vehicle
 
             india_timezone = pytz.timezone('Asia/Kolkata')
@@ -142,6 +149,7 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
     @staticmethod
     async def get_user(user_id):
         from django.contrib.auth.models import AnonymousUser
+
         from user.models import User
 
         try:

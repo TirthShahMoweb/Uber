@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
-from user.models import RolePermission
 
+from user.models import RolePermission
 
 
 class DynamicPermission(BasePermission):

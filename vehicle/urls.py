@@ -1,10 +1,12 @@
-from django.urls import path, include
-from vehicle.views import vehicleViews
+from django.urls import include, path
 # from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,  # Generates access & refresh token
-    TokenRefreshView      # Refreshes access token
-)
+from rest_framework_simplejwt.views import \
+    TokenObtainPairView  # Generates access & refresh token
+from rest_framework_simplejwt.views import \
+    TokenRefreshView  # Refreshes access token
+
+from vehicle.views import vehicleViews
+
 # router = DefaultRouter()
 # router.register(r'resetpassword', UserViews.ResetPassword, basename='ResetPassword')
 # urlpatterns = router.urls

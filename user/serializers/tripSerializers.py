@@ -1,11 +1,11 @@
-from rest_framework import serializers
-from rest_framework.exceptions import APIException
-from django.utils import timezone
-from django.shortcuts import get_object_or_404
-
-from ..models import Trip, User, DriverDetail, Payment
 import random
 
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import serializers
+from rest_framework.exceptions import APIException
+
+from ..models import DriverDetail, Payment, Trip, User
 
 
 class CustomValidationError(APIException):
@@ -184,6 +184,7 @@ class PaymentListSerializer(serializers.ModelSerializer):
 
 
 from django.conf import settings
+
 
 class DriverPersonalInfoSerializer(serializers.ModelSerializer):
     thumbnail_pic = serializers.ImageField(allow_null=True)

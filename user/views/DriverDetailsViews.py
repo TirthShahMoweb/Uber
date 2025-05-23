@@ -1,24 +1,29 @@
+from django.db.models import F, Q, Sum, Value
+from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import (CreateAPIView, ListAPIView,
+                                     ListCreateAPIView, RetrieveAPIView,
+                                     UpdateAPIView)
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.views import APIView
-
-from django.db.models import F, Value, Sum, Q
-from django.db.models.functions import Concat
-from django_filters.rest_framework import DjangoFilterBackend
-from django.utils import timezone
-from django.urls import reverse
-from django.shortcuts import get_object_or_404
-
 
 from utils.mixins import DynamicPermission
-from ..models import DriverDetail, DocumentType, User, DriverRequest, Payment, Role, Trip
-from ..serializers.driverDetailsSerializers import DriverSerializer, AdminDriverApprovalSerializer, DriverDraftSerializer, DriverPersonalDetailsViewSerializer, DocumentTypeSerializer, VerificationRequestSerializer, DriverVerificationPendingSerializer, ImpersonationSerializer
 
+from ..models import (DocumentType, DriverDetail, DriverRequest, Payment, Role,
+                      Trip, User)
+from ..serializers.driverDetailsSerializers import (
+    AdminDriverApprovalSerializer, DocumentTypeSerializer,
+    DriverDraftSerializer, DriverPersonalDetailsViewSerializer,
+    DriverSerializer, DriverVerificationPendingSerializer,
+    ImpersonationSerializer, VerificationRequestSerializer)
 
 
 class ImpersonationPermission(BasePermission):

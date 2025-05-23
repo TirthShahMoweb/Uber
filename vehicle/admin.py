@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Vehicle, VehicleRequest, DocumentType
+from .models import DocumentType, Vehicle, VehicleRequest
+
 # Register your models here.
 
 admin.site.register(Vehicle)

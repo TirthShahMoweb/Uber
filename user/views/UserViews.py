@@ -1,26 +1,42 @@
-from rest_framework import status
-from rest_framework.authentication import authenticate
-from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView, DestroyAPIView,CreateAPIView, RetrieveAPIView, ListAPIView
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from rest_framework.exceptions import NotFound
-from rest_framework.filters import SearchFilter, OrderingFilter
-from django.db.models import F, Value, CharField
-from django.db.models.functions import Concat
-from django.shortcuts import get_object_or_404
-from utils.mixins import DynamicPermission
-from ..models import User, Role, Permission, RolePermission, DriverDetail, Trip
-from ..serializers.userSerializers import AdminRightsSerializer, TripHistorySerializer, ResendOtpSerializer, UpdateTeamMemberSerializer, ListTeamMemberSerializer, AddTeamMemberSerializer, OtpVerificationSerializer, mobileNumberSerializer, AdminSerializer, updateProfileSerializer, ChangePasswordSerializer, ForgotPasswordSerializer, CustomUserSerializer, ResetPasswordSerializer , LoginSerializer
-from Uber import settings
-
-from django.core.mail import send_mail
-from django.utils import timezone
-
 import random
 
+from django.core.mail import send_mail
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.authentication import authenticate
+from rest_framework.exceptions import NotFound
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import (CreateAPIView, DestroyAPIView,
+                                     ListAPIView, RetrieveAPIView,
+                                     RetrieveUpdateAPIView, UpdateAPIView)
+from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from Uber import settings
+from utils.mixins import DynamicPermission
+
+from ..models import DriverDetail, Permission, Role, RolePermission, Trip, User
+from ..serializers.userSerializers import (AddTeamMemberSerializer,
+                                           AdminRightsSerializer,
+                                           AdminSerializer,
+                                           ChangePasswordSerializer,
+                                           CustomUserSerializer,
+                                           ForgotPasswordSerializer,
+                                           ListTeamMemberSerializer,
+                                           LoginSerializer,
+                                           OtpVerificationSerializer,
+                                           ResendOtpSerializer,
+                                           ResetPasswordSerializer,
+                                           TripHistorySerializer,
+                                           UpdateTeamMemberSerializer,
+                                           mobileNumberSerializer,
+                                           updateProfileSerializer)
 
 
 class CanEditTeamMember(BasePermission):

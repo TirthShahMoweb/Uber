@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .consumers import TripUpdateConsumer
 
 websocket_urlpatterns = [

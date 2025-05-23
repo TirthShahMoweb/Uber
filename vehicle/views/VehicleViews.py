@@ -1,20 +1,31 @@
+from django.db.models import (BooleanField, Case, CharField, F, OuterRef,
+                              Subquery, Value, When)
+from django.db.models.functions import Concat
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.generics import ListAPIView, UpdateAPIView, CreateAPIView, RetrieveAPIView
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import (CreateAPIView, ListAPIView,
+                                     RetrieveAPIView, UpdateAPIView)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.filters import SearchFilter, OrderingFilter
 
-from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F, Value, CharField, Case, When, BooleanField
-from django.db.models.functions import Concat
-from django.db.models import Subquery, OuterRef
-from django.shortcuts import get_object_or_404
-from utils.mixins import DynamicPermission
-from ..models import Vehicle, VehicleRequest, DocumentType
 from user.models import DriverDetail
-from ..serializers.vehicleSerializers import VehicleImageSerializer, SelectVehicleSerializer, DriverVehiclesListSerializer, VehicleListViewSerializer, AdminVehicleApprovalSerializer, AdminVehicleStatusListSerailzier, VehicleDetailsSerializer, DraftVehicleListViewSerializer, VehicleFrontImageSerializer
+from utils.mixins import DynamicPermission
+
+from ..models import DocumentType, Vehicle, VehicleRequest
+from ..serializers.vehicleSerializers import (AdminVehicleApprovalSerializer,
+                                              AdminVehicleStatusListSerailzier,
+                                              DraftVehicleListViewSerializer,
+                                              DriverVehiclesListSerializer,
+                                              SelectVehicleSerializer,
+                                              VehicleDetailsSerializer,
+                                              VehicleFrontImageSerializer,
+                                              VehicleImageSerializer,
+                                              VehicleListViewSerializer)
+
 # , DisplayVehicleSerializer, VehicleVerificationPendingSerializer, ResubmissionVehicleSeralizer
 
 

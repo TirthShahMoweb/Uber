@@ -1,10 +1,10 @@
 from django.urls import reverse
-
 from rest_framework import serializers
 
-from ..models import Vehicle, VehicleRequest, DocumentType
 from user.models import DriverDetail
 from vehicle.models import DocumentType
+
+from ..models import DocumentType, Vehicle, VehicleRequest
 
 
 class VehicleSerializer(serializers.ModelSerializer):

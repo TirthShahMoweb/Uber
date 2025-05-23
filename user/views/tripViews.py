@@ -1,27 +1,28 @@
+import math
+from datetime import timedelta
+from decimal import Decimal
+
+import pytz
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.filters import SearchFilter, OrderingFilter
 
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from decimal import Decimal
-from datetime import timedelta
-import math
-import pytz
-
-from utils.mixins import DynamicPermission
-from ..models import DriverRequest, DriverDetail, User, TripFare, Trip, Payment
-from ..serializers.tripSerializers import TripSerializer, FeedbackRatingSerializer, PaymentListSerializer, TripCancelSerializer, VerifiedDriverAtPickUpLocationSerializer, TripApprovalSerializer
+from Uber.settings import COMMISSION_PERCENTAGE, open_route_service_key
 from utils.helper import calculate_road_distance_and_time
-from Uber.settings import open_route_service_key, COMMISSION_PERCENTAGE
+from utils.mixins import DynamicPermission
 
-
+from ..models import DriverDetail, DriverRequest, Payment, Trip, TripFare, User
+from ..serializers.tripSerializers import (
+    FeedbackRatingSerializer, PaymentListSerializer, TripApprovalSerializer,
+    TripCancelSerializer, TripSerializer,
+    VerifiedDriverAtPickUpLocationSerializer)
 
 # class TripDetails(ListAPIView):
 #     '''

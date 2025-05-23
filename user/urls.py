@@ -1,9 +1,12 @@
-from django.urls import path, include
-from .views import userViews, rolesViews, permissionViews, driverDetailsViews, languageViews, tripViews
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,  # Generates access & refresh token
-    TokenRefreshView      # Refreshes access token
-)
+from django.urls import include, path
+from rest_framework_simplejwt.views import \
+    TokenObtainPairView  # Generates access & refresh token
+from rest_framework_simplejwt.views import \
+    TokenRefreshView  # Refreshes access token
+
+from .views import (driverDetailsViews, languageViews, permissionViews,
+                    rolesViews, tripViews, userViews)
+
 # id name, mobile_number created_at status
 
 

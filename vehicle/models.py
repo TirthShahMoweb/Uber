@@ -1,8 +1,9 @@
+import os
+import uuid
+
 from django.db import models
-import os, uuid
 
 from utils.baseModel import BaseModel
-
 
 
 def unique_vehicle_images_path(instance, filename):

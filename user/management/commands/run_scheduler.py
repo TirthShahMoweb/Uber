@@ -1,7 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
+
 from user.cron import check_availblity_of_driver, delete_api_log
-
-
 
 scheduler = BackgroundScheduler()
 
