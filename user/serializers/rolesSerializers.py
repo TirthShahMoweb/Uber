@@ -7,11 +7,11 @@ class roleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ('role_name', 'description')
+        fields = ("role_name", "description")
 
     def validate_role_name(self, data):
 
-        if Role.objects.filter(role_name = data).exists():
+        if Role.objects.filter(role_name=data).exists():
             raise serializers.ValidationError("Role name already exists.")
         return data
 
@@ -19,8 +19,9 @@ class roleSerializer(serializers.ModelSerializer):
         role = Role.objects.create(**validated_data)
         return role
 
+
 class roleListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ('id', 'role_name')
+        fields = ("id", "role_name")

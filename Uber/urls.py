@@ -8,24 +8,28 @@ from rest_framework import permissions
 from Uber import settings
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="API documentation",
-      default_version='v1',
-      description="Taxi Booking",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
-   authentication_classes=[],
+    openapi.Info(
+        title="API documentation",
+        default_version="v1",
+        description="Taxi Booking",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@snippets.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+    authentication_classes=[],
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('user.urls')),
-    path('', include('vehicle.urls')),
-    path('docs', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path("admin/", admin.site.urls),
+    path("", include("user.urls")),
+    path("", include("vehicle.urls")),
+    path(
+        "docs",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
 ]
 
 if settings.DEBUG:

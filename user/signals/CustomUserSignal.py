@@ -9,17 +9,17 @@ from user.models import User
 
 
 @receiver(pre_save, sender=User)
-def updated_at_pre_save(sender,instance, **kwargs):
+def updated_at_pre_save(sender, instance, **kwargs):
     instance.updated_at = timezone.now()
 
-@receiver(post_save, sender=User)
 
+@receiver(post_save, sender=User)
 def create_thumbnail(sender, instance, **kwargs):
     if instance.profile_pic and not instance.thumbnail_pic:
         thumbnail_size = (100, 100)
         profile_pic_path = instance.profile_pic.path
         file_name = os.path.basename(profile_pic_path)
-        thumbnail_pic_path = os.path.join('media/', 'thumbnail_pics/', file_name)
+        thumbnail_pic_path = os.path.join("media/", "thumbnail_pics/", file_name)
 
         # Create directory for the thumbnail if it doesn't exist
         os.makedirs(os.path.dirname(thumbnail_pic_path), exist_ok=True)
@@ -42,7 +42,7 @@ def create_thumbnail(sender, instance, **kwargs):
             thumbnail_size = (100, 100)
             profile_pic_path = instance.profile_pic.path
             file_name = os.path.basename(profile_pic_path)
-            thumbnail_pic_path = os.path.join('media/', 'thumbnail_pics/', file_name)
+            thumbnail_pic_path = os.path.join("media/", "thumbnail_pics/", file_name)
 
             os.makedirs(os.path.dirname(thumbnail_pic_path), exist_ok=True)
 

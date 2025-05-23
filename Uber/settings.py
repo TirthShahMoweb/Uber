@@ -27,20 +27,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 logger = logging.getLogger(__name__)  # Create a logger object
 
-CRON_LOG_FILENAME = os.path.join(BASE_DIR, 'log/cron.log')
-ERROR_LOG_FILENAME = os.path.join(BASE_DIR, 'log/error.log')
+CRON_LOG_FILENAME = os.path.join(BASE_DIR, "log/cron.log")
+ERROR_LOG_FILENAME = os.path.join(BASE_DIR, "log/error.log")
 
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")  # Uses env variable if available
+BASE_URL = os.getenv(
+    "BASE_URL", "http://localhost:8000"
+)  # Uses env variable if available
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "console": {
-            "format": '%(name)-12s %(levelname)-8s %(message)s',
+            "format": "%(name)-12s %(levelname)-8s %(message)s",
         },
         "file": {
-            "format": '%(asctime)s  %(name)-12s %(levelname)-8s %(message)s',
+            "format": "%(asctime)s  %(name)-12s %(levelname)-8s %(message)s",
         },
     },
     "handlers": {
@@ -71,14 +73,14 @@ LOGGING = {
             "handlers": ["cron_file"],
             "propagate": False,
         },
-    }
+    },
 }
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
-open_route_service_key = '5b3ce3597851110001cf624850c190f4ff394eb4a83c14300af5c636'
+open_route_service_key = "5b3ce3597851110001cf624850c190f4ff394eb4a83c14300af5c636"
 
 # settings.py
-TIME_ZONE = 'Asia/Kolkata'
+TIME_ZONE = "Asia/Kolkata"
 USE_TZ = True
 
 # Quick-start development settings - unsuitable for production
@@ -88,45 +90,45 @@ USE_TZ = True
 # DEBUG = config('DEBUG', cast=bool, default=False)
 # ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
-SECRET_KEY = 'django-insecure-h7*4q*549%@sbg#e@n7dgoc8#b%y6a!86jc0!94+6&kk7l!_m4'
+SECRET_KEY = "django-insecure-h7*4q*549%@sbg#e@n7dgoc8#b%y6a!86jc0!94+6&kk7l!_m4"
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
-AUTH_USER_MODEL = 'user.User'
+AUTH_USER_MODEL = "user.User"
 
 INSTALLED_APPS = [
-    'daphne',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'user',
-    'vehicle',
-    'drf_yasg',
-    'corsheaders',
-    'drf_api_logger',
-    'django_filters',
-    'channels',
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "user",
+    "vehicle",
+    "drf_yasg",
+    "corsheaders",
+    "drf_api_logger",
+    "django_filters",
+    "channels",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
 ]
 
-ROOT_URLCONF = 'Uber.urls'
+ROOT_URLCONF = "Uber.urls"
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -138,25 +140,24 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 
-
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
 # WSGI_APPLICATION = 'Uber.wsgi.application'
-ASGI_APPLICATION = 'Uber.asgi.application'
+ASGI_APPLICATION = "Uber.asgi.application"
 
 DRF_API_LOGGER_DATABASE = True
 
@@ -164,13 +165,13 @@ DRF_API_LOGGER_DATABASE = True
 # https:/docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Uber',
-        'USER': 'postgres',
-        'PASSWORD': 'tirth',
-        'HOST': 'localhost',  # or your PostgreSQL server IP
-        'PORT': '5432',  # Default PostgreSQL port
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "Uber",
+        "USER": "postgres",
+        "PASSWORD": "tirth",
+        "HOST": "localhost",  # or your PostgreSQL server IP
+        "PORT": "5432",  # Default PostgreSQL port
     }
 }
 
@@ -190,16 +191,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -207,9 +208,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'Asia/Kolkata'
+TIME_ZONE = "Asia/Kolkata"
 USE_TZ = True
 
 # USE_I18N = True
@@ -222,48 +223,48 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
+STATIC_URL = "static/"
+MEDIA_URL = "/media/"
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 COMMISSION_PERCENTAGE = Decimal(0.2)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-   'rest_framework.permissions.AllowAny',
-],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 8,
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 8,
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"]
 }
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'tirth.web.moweb@gmail.com'
-EMAIL_HOST_PASSWORD = 'dtoumtcmtoyfsucc'
+EMAIL_HOST_USER = "tirth.web.moweb@gmail.com"
+EMAIL_HOST_PASSWORD = "dtoumtcmtoyfsucc"
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=3),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
 
 CHANNEL_LAYERS = {
@@ -277,19 +278,17 @@ CHANNEL_LAYERS = {
 # CELERY_TASK_SERIALIZER = 'json'
 
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header',
-            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer <token>"'
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": 'JWT Authorization header using the Bearer scheme. Example: "Bearer <token>"',
         }
     },
 }
 
-CRONJOBS = [
-    ('*/1 * * * *', 'Uber.cron.print_hello')
-]
+CRONJOBS = [("*/1 * * * *", "Uber.cron.print_hello")]
 
 # EMAIL_BACKEND = config('EMAIL_BACKEND')
 # EMAIL_HOST = config('EMAIL_HOST')

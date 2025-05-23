@@ -7,11 +7,11 @@ class permissionsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Permission
-        fields = ['permission_name', 'description']
+        fields = ["permission_name", "description"]
 
     def validate_permission_name(self, data):
 
-        if Permission.objects.filter(permission_name = data).exists():
+        if Permission.objects.filter(permission_name=data).exists():
             raise serializers.ValidationError("Permission name already exists.")
         return data
 

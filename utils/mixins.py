@@ -5,8 +5,9 @@ from user.models import RolePermission
 
 class DynamicPermission(BasePermission):
     """
-        DynamicPermission for all types of permissions.
+    DynamicPermission for all types of permissions.
     """
+
     def __init__(self, required_permissions):
         self.required_permissions = required_permissions
 
@@ -14,8 +15,12 @@ class DynamicPermission(BasePermission):
         role = request.user.role
         if role is None:
             return False
-        if request.user.user_type != 'admin':
+        if request.user.user_type != "admin":
             return False
-        permissions = RolePermission.objects.filter(role=role).first().permissions.values_list('permission_name', flat=True)
+        permissions = (
+            RolePermission.objects.filter(role=role)
+            .first()
+            .permissions.values_list("permission_name", flat=True)
+        )
         required_permissions = self.required_permissions
         return bool(required_permissions in list(permissions))
