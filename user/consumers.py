@@ -58,11 +58,10 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
             from .serializers.tripSerializers import DriverPersonalInfoSerializer
 
             trip = await Trip.objects.select_related("customer", "driver").aget(
-                id=trip_id
-            )
+                id=trip_id)
+
             await sync_to_async(TripLocation.objects.create)(
-                trip_id=trip_id, latitude=latitude, longitude=longitude
-            )
+                trip_id=trip_id, latitude=latitude, longitude=longitude)
             customer_id = trip.customer.id
             driver_id = trip.driver.id
 
@@ -71,7 +70,7 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
 
             import pytz
             from django.utils import timezone
-
+            from django.db.models import Avg
             from Uber.settings import open_route_service_key
             from utils.helper import calculate_road_distance_and_time
             from vehicle.models import Vehicle
@@ -98,12 +97,14 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                     open_route_service_key,
                 )
 
+            customer_avg_rating = await sync_to_async(
+            lambda: Trip.objects.filter(customer=trip.customer).aggregate(avg_rating=Avg('customer_rating')))()
             distance = float(distance)
             data = {
                 "id": trip.id,
                 "pickup_location": trip.pickup_location,
                 "drop_location": trip.drop_location,
-                "distance": 0,
+                "distance": distance,
                 "total_fare": float(trip.fare),
                 "name": f"{trip.customer.first_name} {trip.customer.last_name}",
                 "estimated_time": f"{math.ceil(durations)} mins",
@@ -111,12 +112,11 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                     current_time_ist + timedelta(minutes=math.ceil(durations))
                 ).strftime("%I:%M %p"),
                 "mobile_number": trip.customer.mobile_number,
+                "ratings": customer_avg_rating['avg_rating'],
             }
 
             request_context = {"server": self.scope["server"]}
-            serializer = DriverPersonalInfoSerializer(
-                trip.driver, context=request_context
-            )
+            serializer = DriverPersonalInfoSerializer(trip.driver, context=request_context)
 
             # Driver data
             await self.channel_layer.group_send(
@@ -131,6 +131,10 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                     },
                 },
             )
+
+            driver_avg_rating = customer_avg_rating = await sync_to_async(
+            lambda: Trip.objects.filter(driver=trip.driver).aggregate(avg_rating=Avg('driver_rating')))()
+
             vehicle_id = await sync_to_async(lambda: trip.vehicle_id)()
             vehicle = await Vehicle.objects.filter(id=trip.vehicle_id.id).afirst()
             data["otp"] = trip.otp
@@ -138,6 +142,7 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
             data["image"] = serializer.data["thumbnail_pic"]
             data["mobile_number"] = serializer.data["mobile_number"]
             data["vehicle_number"] = vehicle.vehicle_number
+            data['ratings'] = driver_avg_rating['avg_rating']
 
             # Customer Data
             await self.channel_layer.group_send(
@@ -161,6 +166,10 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
 
     async def location_update(self, event):
         await self.send(text_data=json.dumps(event["message"]))
+
+    async def trip_complete_update(self, event):
+        await self.send(text_data=json.dumps(event["message"]))
+
 
     @staticmethod
     async def get_user(user_id):

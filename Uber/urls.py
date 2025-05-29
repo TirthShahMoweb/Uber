@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("user.urls")),
     path("", include("vehicle.urls")),
+    path("", include("report.urls")),
     path(
         "docs",
         schema_view.with_ui("swagger", cache_timeout=0),

@@ -208,6 +208,7 @@ class Trip(BaseModel):
     drop_location = models.CharField(max_length=255)
     pickup_time = models.DateTimeField(null=True, blank=True)
     drop_time = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
     drop_location_latitude = models.DecimalField(
         max_digits=19, decimal_places=16, null=True, blank=True
     )

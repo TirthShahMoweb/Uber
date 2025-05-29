@@ -122,6 +122,7 @@ class TripApprovalSerializer(serializers.Serializer):
         instance.driver = user
         instance.vehicle_id = driver.in_use
         instance.status = "Accepted"
+        instance.approved_at = timezone.now()
         instance.otp = random.randint(1000, 9999)
         instance.save()
         return instance
@@ -157,7 +158,6 @@ class FeedbackRatingSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context.get("user")
         trip = self.context.get("trip")
-        print(type(attrs.get("rating")))
         if 0 >= attrs.get("rating") or attrs.get("rating") >= 6:
             errors = {"rating": "Should be between 1 to 5."}
             raise CustomValidationError(errors)
@@ -171,12 +171,12 @@ class FeedbackRatingSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         user = self.context.get("user")
         if user == instance.customer:
-            instance.customer_feedback = validated_data.get("feedback")
-            instance.customer_rating = validated_data.get("rating")
-
-        elif user == instance.driver:
             instance.driver_feedback = validated_data.get("feedback")
             instance.driver_rating = validated_data.get("rating")
+
+        elif user == instance.driver:
+            instance.customer_feedback = validated_data.get("feedback")
+            instance.customer_rating = validated_data.get("rating")
 
         instance.save()
         return validated_data

@@ -399,12 +399,33 @@ class TripHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = (
-            "pickup_location",
+            "id",
             "drop_location",
             "status",
-            "pickup_time",
+            "cancelled_at",
             "drop_time",
             "distance",
             "fare",
             "name",
+        )
+
+
+class TripDetailsHistorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = (
+            "id",
+            "pickup_location",
+            "drop_location",
+            "pickup_time",
+            "drop_time",
+            "status",
+            "cancelled_at",
+            "distance",
+            "fare",
+            "name",
+            "driver_feedback",
+            "driver_rating",
         )

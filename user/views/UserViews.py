@@ -1,7 +1,7 @@
 import random
 
 from django.core.mail import send_mail
-from django.db.models import CharField, F, Value
+from django.db.models import CharField, F, Value, Q, Case, When
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -30,7 +30,7 @@ from ..models import DriverDetail, Permission, Role, RolePermission, Trip, User
 from ..serializers.userSerializers import (
     AddTeamMemberSerializer,
     AdminRightsSerializer,
-    AdminSerializer,
+    TripDetailsHistorySerializer,
     ChangePasswordSerializer,
     CustomUserSerializer,
     ForgotPasswordSerializer,
@@ -671,23 +671,43 @@ class UpdateDriverLastOnlineAtView(UpdateAPIView):
         )
 
 
-# TODO: Covert it into constomer Trip VIew
 class TripHistoryView(ListAPIView):
     """
     Trip History
     """
-
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = TripHistorySerializer
 
     def get_queryset(self):
-        queryset = Trip.objects.filter(customer=self.request.user).annotate(
-            name=Concat(
-                F("driver__first_name"),
-                Value(" "),
-                F("driver__last_name"),
-                output_field=CharField(),
-            )
-        )
+        queryset = Trip.objects.filter(
+        Q(customer=self.request.user) | Q(driver=self.request.user)).annotate(
+        name=Case(
+        When(customer=self.request.user, then=Concat(F("driver__first_name"), Value(" "), F("driver__last_name"), output_field=CharField())),
+        When(driver=self.request.user, then=Concat(F("customer__first_name"), Value(" "), F("customer__last_name"), output_field=CharField())),
+        default=Value("Unknown"),
+        output_field=CharField(),
+    )
+)
+        return queryset
+
+
+class TripDetailsHistoryView(RetrieveAPIView):
+    """
+        Trip Details History
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = TripDetailsHistorySerializer
+
+    def get_queryset(self):
+        queryset = Trip.objects.filter(
+        (Q(customer=self.request.user) | Q(driver=self.request.user)),id=self.kwargs['pk']).annotate(
+        name=Case(
+        When(customer=self.request.user, then=Concat(F("driver__first_name"), Value(" "), F("driver__last_name"), output_field=CharField())),
+        When(driver=self.request.user, then=Concat(F("customer__first_name"), Value(" "), F("customer__last_name"), output_field=CharField())),
+        default=Value("Unknown"),
+        output_field=CharField(),
+    )
+)
         return queryset

@@ -27,21 +27,25 @@ urlpatterns = [
     path("listTeamMemberView", userViews.ListTeamMemberView.as_view()),
     path("destroyTeamMemberView/<int:pk>", userViews.DestroyTeamMemberView.as_view()),
     path("updateTeamMemberView/<int:pk>", userViews.UpdateTeamMemberView.as_view()),
+
     # Roles
     path("createRoles", rolesViews.CreateRoles.as_view()),
     path(
         "retrieveUpdateDestroyRoles/<int:pk>",
         rolesViews.RetrieveUpdateDestroyRoles.as_view(),
     ),
+
     # path('AssignAdminRoleView/', userViews.AssignAdminRoleView.as_view()),
     path("adminRights/<str:verification_code>", userViews.adminRightsView.as_view()),
     path("roleListView", rolesViews.RoleListView.as_view()),
+
     # Permission
     path("createPermission", permissionViews.CreatePermission.as_view()),
     path(
         "retrieveUpdateDestroyPermission/<int:pk>",
         permissionViews.RetrieveUpdateDestroyPermission.as_view(),
     ),
+
     # User Details
     path("updateProfileView", userViews.UpdateProfileView.as_view()),
     path("changePasswordView", userViews.ChangePasswordView.as_view()),
@@ -50,6 +54,7 @@ urlpatterns = [
         "forgot-password/<str:verification_code>", userViews.ResetPasswordView.as_view()
     ),
     path("ProfileView", userViews.ProfileView.as_view()),
+
     # Driver Details
     path(
         "adminDriverStatusList", driverDetailsViews.AdminDriverStatusListView.as_view()
@@ -75,6 +80,8 @@ urlpatterns = [
     ),
     # path('driverTripPendingView', driverDetailsViews.DriverTripPendingView.as_view(), name='driver_trip_pending'),
     path("tripHistoryView", userViews.TripHistoryView.as_view()),
+    path('tripDetailsHistoryView/<pk>', userViews.TripDetailsHistoryView.as_view()),
+
     # Trip Details
     path("tripDetails", tripViews.TripDetails.as_view()),
     path("addTripDetails", tripViews.AddTripDetails.as_view(), name="add_trip"),

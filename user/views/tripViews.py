@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytz
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -142,6 +143,8 @@ class AddTripDetails(CreateAPIView):
         if serializer.is_valid():
             trip = serializer.save()
             user = get_object_or_404(User, mobile_number=user)
+            customer_avg_rating = Trip.objects.filter(customer=user).aggregate(avg_rating=Avg('customer_rating'))
+            print(customer_avg_rating,"=-=-=-=-=-=-")
             data = {
                 "id": trip.id,
                 "distance": f"{trip.distance} km",
@@ -151,6 +154,7 @@ class AddTripDetails(CreateAPIView):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "fare": f"Rs. {trip.fare}",
+                "ratings": customer_avg_rating['avg_rating']
             }
 
             vehicle_type = trip.vehicle_type
@@ -338,8 +342,7 @@ class VerifiedDriverAtPickUpLocationView(UpdateAPIView):
 
     def get_object(self):
         trip = get_object_or_404(
-            Trip, id=self.kwargs.get("id"), driver=self.request.user
-        )
+            Trip, id=self.kwargs.get("id"), driver=self.request.user)
         return trip
 
     def update(self, request, *args, **kwargs):
@@ -378,13 +381,30 @@ class TripCompletedView(UpdateAPIView):
         print(trip.driver.id)
         print(round(trip.fare * COMMISSION_PERCENTAGE, 2))
         driver = get_object_or_404(DriverDetail, user=trip.driver.id)
-        driver.amount_remaining = round(trip.fare * COMMISSION_PERCENTAGE, 2)
+
         driver.amount_received = round(trip.fare * (1 - COMMISSION_PERCENTAGE), 2)
         driver.save()
         Payment.objects.create(
             trip=trip, amount=round(trip.fare * COMMISSION_PERCENTAGE, 2)
         )
         trip.save()
+        data = {"id" : trip.id}
+
+        channel_layer = get_channel_layer()
+        group_name = f"driver_{trip.customer.id}"
+        async_to_sync(channel_layer.group_send)(
+        group_name,
+                    {
+                        "type": "trip_complete_update",
+                        "message": {
+                            "status": "success",
+                            "message": "Trip Completed",
+                            "event": "trip_complete_update",
+                            "data": data,
+                        },
+                    },
+                )
+
         return Response(
             {"status": "success", "message": "Trip Successfully completed."},
             status=status.HTTP_200_OK,
@@ -417,7 +437,7 @@ class FeedbackRatingView(UpdateAPIView):
         return Response(
             {
                 "status": "success",
-                "message": "Feedaback and Rating recived Successfully.",
+                "message": "Feedback and Rating recived Successfully.",
             },
             status=status.HTTP_200_OK,
         )

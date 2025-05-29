@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "user",
     "vehicle",
+    "report",
     "drf_yasg",
     "corsheaders",
     "drf_api_logger",
