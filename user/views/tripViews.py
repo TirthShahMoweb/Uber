@@ -323,7 +323,7 @@ class ReachedPickUpLocationView(UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         trip = self.get_object()
-        trip.status = "Reached"
+        trip.status = "reached"
         trip.save()
         return Response(
             {"status": "success", "message": "Driver Successfully Reached."},
@@ -351,7 +351,7 @@ class VerifiedDriverAtPickUpLocationView(UpdateAPIView):
             data=request.data, context={"user": request.user, "trip": trip}
         )
         serializer.is_valid(raise_exception=True)
-        trip.status = "On Going"
+        trip.status = "on_going"
         trip.pickup_time = timezone.now()
         trip.save()
         return Response(
@@ -376,7 +376,7 @@ class TripCompletedView(UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         trip = self.get_object()
-        trip.status = "Completed"
+        trip.status = "completed"
         trip.drop_time = timezone.now()
         print(trip.driver.id)
         print(round(trip.fare * COMMISSION_PERCENTAGE, 2))

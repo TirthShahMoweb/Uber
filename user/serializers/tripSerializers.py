@@ -121,7 +121,7 @@ class TripApprovalSerializer(serializers.Serializer):
         driver = get_object_or_404(DriverDetail, user=user)
         instance.driver = user
         instance.vehicle_id = driver.in_use
-        instance.status = "Accepted"
+        instance.status = "accepted"
         instance.approved_at = timezone.now()
         instance.otp = random.randint(1000, 9999)
         instance.save()

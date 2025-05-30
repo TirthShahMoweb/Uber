@@ -1,4 +1,4 @@
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.filters import  SearchFilter
 from rest_framework.generics import ListAPIView
 
 from ..models import Language

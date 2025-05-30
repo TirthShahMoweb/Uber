@@ -1,7 +1,7 @@
 import random
 
 from django.core.mail import send_mail
-from django.db.models import CharField, F, Value, Q, Case, When
+from django.db.models import CharField, F, Value, Q, Case, When, Count
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -43,6 +43,7 @@ from ..serializers.userSerializers import (
     UpdateTeamMemberSerializer,
     mobileNumberSerializer,
     updateProfileSerializer,
+    CustomerListSerializer
 )
 
 
@@ -707,7 +708,33 @@ class TripDetailsHistoryView(RetrieveAPIView):
         When(customer=self.request.user, then=Concat(F("driver__first_name"), Value(" "), F("driver__last_name"), output_field=CharField())),
         When(driver=self.request.user, then=Concat(F("customer__first_name"), Value(" "), F("customer__last_name"), output_field=CharField())),
         default=Value("Unknown"),
-        output_field=CharField(),
-    )
-)
+        output_field=CharField()))
+
         return queryset
+
+
+class CustomerListView(ListAPIView):
+    # authentication_classes = [JWTAuthentication]
+
+    # def get_permissions(self):
+    #     return [IsAuthenticated(), DynamicPermission("user_view")]
+
+    serializer_class = CustomerListSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["first_name", "last_name"]
+
+    ordering_fields = ["first_name", "last_name", "created_at"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        customers = User.objects.filter(user_type = "customer").annotate(
+            total_trips=Count('customer_trip'))
+
+        if self.request.query_params.get('trip') == 'with_trips':
+            customers= customers.filter(total_trips__gt=0)
+        elif self.request.query_params.get('trip') == 'without_trips':
+            customers= customers.filter(total_trips=0)
+
+        return customers.values(
+            'id', 'first_name', 'last_name', 'mobile_number', 'created_at', 'total_trips'
+        ).order_by('-total_trips')

@@ -104,7 +104,7 @@ class TripUpdateConsumer(AsyncWebsocketConsumer):
                 "id": trip.id,
                 "pickup_location": trip.pickup_location,
                 "drop_location": trip.drop_location,
-                "distance": distance,
+                "distance": 0,
                 "total_fare": float(trip.fare),
                 "name": f"{trip.customer.first_name} {trip.customer.last_name}",
                 "estimated_time": f"{math.ceil(durations)} mins",

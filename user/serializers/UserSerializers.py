@@ -429,3 +429,11 @@ class TripDetailsHistorySerializer(serializers.ModelSerializer):
             "driver_feedback",
             "driver_rating",
         )
+
+
+class CustomerListSerializer(serializers.ModelSerializer):
+    total_trips = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'last_name', 'total_trips', 'mobile_number', 'created_at')

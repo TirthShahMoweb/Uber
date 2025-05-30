@@ -12,6 +12,7 @@ from .models import (
     Trip,
     TripFare,
     User,
+    Payment,
 )
 
 # Register your models here.
@@ -26,3 +27,4 @@ admin.site.register(DocumentType)
 admin.site.register(DriverRequest)
 admin.site.register(Trip)
 admin.site.register(TripFare)
+admin.site.register(Payment)

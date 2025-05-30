@@ -27,7 +27,7 @@ urlpatterns = [
     path("listTeamMemberView", userViews.ListTeamMemberView.as_view()),
     path("destroyTeamMemberView/<int:pk>", userViews.DestroyTeamMemberView.as_view()),
     path("updateTeamMemberView/<int:pk>", userViews.UpdateTeamMemberView.as_view()),
-
+    path('customerListView', userViews.CustomerListView.as_view()),
     # Roles
     path("createRoles", rolesViews.CreateRoles.as_view()),
     path(
@@ -65,6 +65,7 @@ urlpatterns = [
         driverDetailsViews.AdminDriverApprovalView.as_view(),
         name="driver-verification-approval",
     ),
+
     # path('driver-details/resubmit', driverDetailsViews.VerificationRequestResubmissionView.as_view(), name = 'resubmission'),
     path("ImpersonationView", driverDetailsViews.ImpersonationView.as_view()),
     path(
@@ -78,6 +79,7 @@ urlpatterns = [
     path(
         "updateDriverLastOnlineAtView", userViews.UpdateDriverLastOnlineAtView.as_view()
     ),
+
     # path('driverTripPendingView', driverDetailsViews.DriverTripPendingView.as_view(), name='driver_trip_pending'),
     path("tripHistoryView", userViews.TripHistoryView.as_view()),
     path('tripDetailsHistoryView/<pk>', userViews.TripDetailsHistoryView.as_view()),

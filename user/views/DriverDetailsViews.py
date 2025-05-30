@@ -192,7 +192,7 @@ class UserCountView(ListAPIView):
             .exclude(id__in=driver_request)
             .count()
         )
-        total_successfull_trip = Trip.objects.filter(status="Completed").count()
+        total_successfull_trip = Trip.objects.filter(status="completed").count()
         total_number_payment_pending = Payment.objects.filter(status="pending").count()
         total_amount_pending = Payment.objects.filter(status="pending").aggregate(
             amount=Sum("amount")
